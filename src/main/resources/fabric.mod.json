@@ -10,9 +10,10 @@
   ],
   "contact": {
     "homepage": "https://ravenbs.xyz/",
-    "sources": "https://github.com/ByteFlipper-58/RavenBS-Fabric"
+    "sources": "https://github.com/ByteFlipper-58/RavenBS-Fabric",
+    "issues": "https://github.com/ByteFlipper-58/RavenBS-Fabric/issues"
   },
-  "license": "MIT",
+  "license": "GPL-3.0",
   "icon": "assets/ravenbs/icon.png",
   "environment": "*",
   "entrypoints": {
@@ -26,13 +27,18 @@
   "mixins": [
     "ravenbs.mixins.json"
   ],
+  "accessWidener": "ravenbs.accesswidener",
   "depends": {
     "fabricloader": ">=0.16.9",
     "minecraft": "~1.20.1",
     "java": ">=17",
     "fabric-api": "*"
   },
-  "suggests": {
-    "another-mod": "*"
+  "custom": {
+    "modmenu": {
+      "links": {
+        "Author Telegram-Channel": "https://t.me/ByteFlipper"
+      }
+    }
   }
 }

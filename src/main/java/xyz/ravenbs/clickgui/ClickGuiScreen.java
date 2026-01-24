@@ -108,7 +108,7 @@ public class ClickGuiScreen extends Screen {
     }
     
     private void renderModules(DrawContext context, int mouseX, int mouseY, CategoryComponent cat, float delta) {
-        int modW = 110;
+        int modW = (cat.category == ModuleCategory.profiles) ? 140 : 110;
         int modX = cat.x + cat.width; 
         
         List<Component> modules = cat.getModules();
@@ -120,6 +120,11 @@ public class ClickGuiScreen extends Screen {
         int availableH = this.height - modY - 10; // 10px padding from bottom
         if (availableH < 50) availableH = 50; // Minimum height
         
+        // ... scrolling logic omitted for brevity, assuming replace logic works with chunks ...
+        // Actually I need to replace the whole method to accept the changes fully properly or target chunks.
+        // Let's replace the whole method to be safe with context.
+        
+        // Copying method body but injecting Width spoofing
         // Check if we need scrolling
         boolean needsScroll = totalH > availableH;
         int visibleH = needsScroll ? availableH : totalH;
@@ -132,14 +137,13 @@ public class ClickGuiScreen extends Screen {
         // Background
         context.fill(modX, modY, modX + modW, modY + visibleH, new Color(0,0,0,140).getRGB());
         
-        // Scrollbar ONLY if needed
+        // Scrollbar ...
         if (needsScroll && maxScroll > 0) {
             int scrollbarH = Math.max(20, (int)((float)visibleH / totalH * visibleH));
             int scrollbarY = modY + (int)((float)modulesScrollY / maxScroll * (visibleH - scrollbarH));
             context.fill(modX + modW - 3, scrollbarY, modX + modW, scrollbarY + scrollbarH, new Color(255,255,255,120).getRGB());
         }
         
-        // Enable scissor for clipping ONLY if scrolling is needed
         int scaleFactor = (int) net.minecraft.client.MinecraftClient.getInstance().getWindow().getScaleFactor();
         int windowHeight = net.minecraft.client.MinecraftClient.getInstance().getWindow().getFramebufferHeight();
         int scissorX = modX * scaleFactor;
@@ -153,6 +157,10 @@ public class ClickGuiScreen extends Screen {
         
         int currentY = modY - modulesScrollY;
         
+        // SPOOF WIDTH
+        int originalCatWidth = cat.width;
+        cat.width = modW;
+        
         for (Component c : modules) {
             if (c instanceof ModuleComponent) {
                 ModuleComponent mod = (ModuleComponent) c;
@@ -164,7 +172,6 @@ public class ClickGuiScreen extends Screen {
                 }
                 
                 boolean isHovered = (mouseX >= modX && mouseX < modX + modW && mouseY >= currentY && mouseY < currentY + 16);
-                // Also check if actually in visible bounds when scrolling
                 if (needsScroll) {
                     isHovered = isHovered && mouseY >= modY && mouseY < modY + visibleH;
                 }
@@ -184,7 +191,6 @@ public class ClickGuiScreen extends Screen {
                 }
                 
                 if (isActive) {
-                    // Render settings outside scissor
                     if (needsScroll) com.mojang.blaze3d.systems.RenderSystem.disableScissor();
                     renderSettings(context, mouseX, mouseY, mod, modX + modW, Math.max(currentY, modY), delta);
                     if (needsScroll) com.mojang.blaze3d.systems.RenderSystem.enableScissor(scissorX, scissorY, scissorW, scissorH);
@@ -193,6 +199,9 @@ public class ClickGuiScreen extends Screen {
                 currentY += 16;
             }
         }
+        
+        // RESTORE WIDTH
+        cat.width = originalCatWidth;
         
         if (needsScroll) {
             com.mojang.blaze3d.systems.RenderSystem.disableScissor();
@@ -252,9 +261,11 @@ public class ClickGuiScreen extends Screen {
         CategoryComponent cat = mod.getParent();
         int originalCatX = cat.x;
         int originalCatY = cat.y;
+        int originalCatWidth = cat.width; // SAVE WIDTH
         
         cat.x = x; // Align X
         cat.y = currentY - cat.height - mod.getOffset() - 16; 
+        cat.width = setW; // SPOOF WIDTH
         
         for (Component s : settings) {
              s.render(context, mouseX, mouseY, delta);
@@ -264,6 +275,7 @@ public class ClickGuiScreen extends Screen {
         // Restore
         cat.x = originalCatX;
         cat.y = originalCatY;
+        cat.width = originalCatWidth; // RESTORE WIDTH
     }
     
     @Override
@@ -271,8 +283,8 @@ public class ClickGuiScreen extends Screen {
          // Route based on Sticky State
          if (stickyModule != null) { // Check if stickyModule is not null first
                 // Calculate position just like render...
-               int modX = stickyCategory.x + stickyCategory.width; // No gap
-                int modW = 110;
+                int modX = stickyCategory.x + stickyCategory.width; // No gap
+                int modW = (stickyCategory.category == ModuleCategory.profiles) ? 140 : 110;
                 int modsTotalH = stickyCategory.getModules().size() * 16;
                 int modY = getModulePanelY(stickyCategory, modsTotalH);
                 
@@ -304,34 +316,37 @@ public class ClickGuiScreen extends Screen {
                
                int contentStartY = setY + descH;
                
-               // Check intersection with Settings Panel
-               if (mouseX >= setX && mouseX <= setX + 140 && mouseY >= setY && mouseY <= setY + setTotalH) {
-                   // Hack: We must spoof the coordinates for `mouseClicked` too!
-                   CategoryComponent cat = stickyModule.getParent();
-                   int originalCatX = cat.x;
-                   int originalCatY = cat.y;
-                   
-                   cat.x = setX;
-                   cat.y = contentStartY - cat.height - stickyModule.getOffset() - 16;
-                   
-                   boolean handled = false;
-                    for(Component s : stickyModule.getSettings()) {
-                        if (s.mouseClicked(mouseX, mouseY, button)) {
-                            handled = true;
-                            break;
-                        }
-                    }
+                if (mouseX >= setX && mouseX <= setX + 140 && mouseY >= setY && mouseY <= setY + setTotalH) {
+                    // Hack: We must spoof the coordinates for `mouseClicked` too!
+                    CategoryComponent cat = stickyModule.getParent();
+                    int originalCatX = cat.x;
+                    int originalCatY = cat.y;
+                    int originalCatWidth = cat.width; // SAVE
                     
-                    cat.x = originalCatX;
-                    cat.y = originalCatY;
+                    cat.x = setX;
+                    cat.y = contentStartY - cat.height - stickyModule.getOffset() - 16;
+                    cat.width = 140; // SPOOF
                     
-                    if (handled) return true;
-               }
+                    boolean handled = false;
+                     for(Component s : stickyModule.getSettings()) {
+                         if (s.mouseClicked(mouseX, mouseY, button)) {
+                             handled = true;
+                             break;
+                         }
+                     }
+                     
+                     cat.x = originalCatX;
+                     cat.y = originalCatY;
+                     cat.width = originalCatWidth; // RESTORE
+                     
+                     if (handled) return true;
+                }
          }
          
          if (stickyCategory != null) {
               // Check Modules
                int modX = stickyCategory.x + stickyCategory.width;
+               int modW = (stickyCategory.category == ModuleCategory.profiles) ? 140 : 110;
                int totalH = stickyCategory.getModules().size() * 16;
                int modY = getModulePanelY(stickyCategory, totalH);
                
@@ -341,7 +356,7 @@ public class ClickGuiScreen extends Screen {
                boolean needsScroll = totalH > availableH;
                int visibleH = needsScroll ? availableH : totalH;
                
-               if (mouseX >= modX && mouseX <= modX + 110 && mouseY >= modY && mouseY <= modY + visibleH) {
+               if (mouseX >= modX && mouseX <= modX + modW && mouseY >= modY && mouseY <= modY + visibleH) {
                     // Account for scroll offset when calculating index
                     int relY = (int)(mouseY - modY + modulesScrollY);
                     int idx = relY / 16; 
@@ -373,7 +388,7 @@ public class ClickGuiScreen extends Screen {
         // Check if hovering modules panel
         if (stickyCategory != null) {
             int modX = stickyCategory.x + stickyCategory.width;
-            int modW = 110;
+            int modW = (stickyCategory.category == ModuleCategory.profiles) ? 140 : 110;
             int totalH = stickyCategory.getModules().size() * 16;
             int modY = getModulePanelY(stickyCategory, totalH);
             
@@ -418,10 +433,10 @@ public class ClickGuiScreen extends Screen {
          }
          
           // 2. Check Modules
-          if (stickyCategory != null) {
-               int modX = stickyCategory.x + stickyCategory.width;
-               int modW = 110;
-               int totalH = stickyCategory.getModules().size() * 16;
+           if (stickyCategory != null) {
+                int modX = stickyCategory.x + stickyCategory.width;
+                int modW = (stickyCategory.category == ModuleCategory.profiles) ? 140 : 110;
+                int totalH = stickyCategory.getModules().size() * 16;
                int modY = getModulePanelY(stickyCategory, totalH);
                
                // Calculate available height (same as renderModules)

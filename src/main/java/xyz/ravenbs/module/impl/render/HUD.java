@@ -73,17 +73,25 @@ public class HUD extends Module {
 
     private void renderArrayList(DrawContext context) {
         List<Module> sortedModules = ModuleManager.modules.stream()
-            .filter(Module::isEnabled)
             .filter(m -> !m.getName().equals("HUD"))
-            .filter(m -> !m.getName().equals("Gui")) // Hide Gui module
-            .sorted(Comparator.comparingInt(m -> -mc.textRenderer.getWidth(getModuleName(m))))
+            .filter(m -> !m.getName().equals("Gui"))
+            .filter(m -> {
+                boolean enabled = m.isEnabled();
+                boolean configEnabled = xyz.ravenbs.config.ConfigManager.isModuleEnabledInConfig(m.getName());
+                // Show if currently enabled OR if it WAS enabled in config (so we can show removal)
+                return enabled || configEnabled;
+            })
+            .sorted(Comparator.comparingInt(m -> {
+                String name = getDisplayName(m);
+                return -mc.textRenderer.getWidth(name);
+            }))
             .collect(Collectors.toList());
 
         int y = posY;
         double delay = 0;
 
         for (Module module : sortedModules) {
-            String name = getModuleName(module);
+            String name = getDisplayName(module);
             
             int c;
             if (color.getRainbow().isToggled()) {
@@ -100,6 +108,19 @@ public class HUD extends Module {
             y += mc.textRenderer.fontHeight + 2;
             delay -= 200; // Delay for rainbow gradient
         }
+    }
+
+    private String getDisplayName(Module module) {
+        String name = getModuleName(module);
+        boolean enabled = module.isEnabled();
+        boolean configEnabled = xyz.ravenbs.config.ConfigManager.isModuleEnabledInConfig(module.getName());
+        
+        if (enabled && !configEnabled) {
+            return "+" + name;
+        } else if (!enabled && configEnabled) {
+            return "-" + name;
+        }
+        return name;
     }
 
     private String getModuleName(Module module) {

@@ -10,9 +10,19 @@ public class RavenBSFabric implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        // This code runs as soon as Minecraft is in a mod-load-ready state.
-        // However, some things (like resources) may still be uninitialized.
-        // Proceed with mild caution.
         LOGGER.info("Hello from RavenBS-Fabric!");
+        
+        // Reset configuration on server join (Strict Config)
+        net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
+            String currentProfile = xyz.ravenbs.config.ConfigManager.getCurrentProfileName();
+            if (currentProfile != null && !currentProfile.isEmpty()) {
+                xyz.ravenbs.config.ConfigManager.loadConfig(currentProfile);
+                xyz.ravenbs.utility.NotificationManager.show("Config", "Profile '" + currentProfile + "' loaded.", xyz.ravenbs.utility.Notification.Type.INFO);
+            } else if (xyz.ravenbs.config.ConfigManager.isLoaded()) {
+                // If loaded default config
+                xyz.ravenbs.config.ConfigManager.loadConfig();
+                 xyz.ravenbs.utility.NotificationManager.show("Config", "Default profile loaded.", xyz.ravenbs.utility.Notification.Type.INFO);
+            }
+        });
     }
 }

@@ -107,7 +107,15 @@ public abstract class Module {
     
     public void onKeyBind() {
         if (this.keycode != 0) {
-           boolean isDown = InputUtil.isKeyPressed(mc.getWindow().getHandle(), this.keycode);
+           boolean isDown;
+           if (this.keycode < 0) {
+               // Mouse
+               int button = -100 - this.keycode;
+               isDown = org.lwjgl.glfw.GLFW.glfwGetMouseButton(mc.getWindow().getHandle(), button) == org.lwjgl.glfw.GLFW.GLFW_PRESS;
+           } else {
+               // Keyboard
+               isDown = InputUtil.isKeyPressed(mc.getWindow().getHandle(), this.keycode);
+           }
            
            if (isDown && !this.isToggled) {
                this.toggle();

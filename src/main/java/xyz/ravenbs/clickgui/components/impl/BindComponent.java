@@ -43,6 +43,10 @@ public class BindComponent extends Component {
             int key = parent.getMod().getKeycode();
             if (key == 0) {
                 keyName = "None";
+            } else if (key < 0) {
+                // Mouse Button
+                int button = -100 - key;
+                keyName = InputUtil.Type.MOUSE.createFromCode(button).getLocalizedText().getString().toUpperCase();
             } else {
                 keyName = InputUtil.fromKeyCode(key, 0).getLocalizedText().getString().toUpperCase();
                 // Fallback for unknown
@@ -60,6 +64,17 @@ public class BindComponent extends Component {
         int y = parent.getParent().y + parent.getParent().height + parent.getOffset() + this.offset;
         int width = parent.getParent().width;
         int height = 16;
+        
+        // If binding, accept any click as bind (except 0/Left if we want to allow clicking out?)
+        // Usually clicking raw allows binding mouse buttons.
+        if (isBinding) {
+            // Bind mouse button
+            // Convention: -100 - button (0 -> -100, 1 -> -101)
+            int key = -100 - button;
+            parent.getMod().setBind(key);
+            isBinding = false;
+            return true;
+        }
         
         if (isHovering(mouseX, mouseY, x, y, width, height) && button == 0) {
             isBinding = !isBinding;

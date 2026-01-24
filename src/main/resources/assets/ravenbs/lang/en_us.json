@@ -257,5 +257,16 @@
     "raven.setting.vanilla_is_5_delay_&_1x_speed": "Vanilla is 5 delay & 1x speed",
     "raven.setting.removes_various_delays": "Removes various delays",
     "raven.setting.show_mouse": "Show Mouse",
-    "raven.setting.show_space": "Show Space"
+    "raven.setting.show_space": "Show Space",
+    "raven.setting.min_cps": "Min CPS",
+    "raven.setting.max_cps": "Max CPS",
+    "raven.setting.jitter": "Jitter",
+    "raven.setting.break_blocks": "Break Blocks",
+    "raven.setting.always_on_via_bind": "Always on via bind",
+    "raven.setting.create": "Create",
+    "raven.setting.overwrite_with_current": "Overwrite with Current",
+    "raven.setting.delete_profile": "Delete Profile",
+    "raven.setting.rename_to": "Rename to",
+    "raven.setting.apply_rename": "Apply Rename",
+    "raven.setting.name": "Name"
 }

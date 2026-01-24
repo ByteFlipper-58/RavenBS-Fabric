@@ -257,5 +257,16 @@
     "raven.setting.vanilla_is_5_delay_&_1x_speed": "Ванилла: 5 задержка и 1x скорость",
     "raven.setting.removes_various_delays": "Убирает разные задержки",
     "raven.setting.show_mouse": "Кнопки мыши",
-    "raven.setting.show_space": "Пробел"
+    "raven.setting.show_space": "Пробел",
+    "raven.setting.min_cps": "Мин CPS",
+    "raven.setting.max_cps": "Макс CPS",
+    "raven.setting.jitter": "Джиттер",
+    "raven.setting.break_blocks": "Ломать блоки",
+    "raven.setting.always_on_via_bind": "Всегда включен",
+    "raven.setting.create": "Создать",
+    "raven.setting.overwrite_with_current": "Перезаписать текущим",
+    "raven.setting.delete_profile": "Удалить профиль",
+    "raven.setting.rename_to": "Переименовать в",
+    "raven.setting.apply_rename": "Применить имя",
+    "raven.setting.name": "Название"
 }

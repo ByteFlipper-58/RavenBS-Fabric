@@ -10,5 +10,11 @@ public interface IMixinMinecraftClient {
     void setItemUseCooldown(int itemUseCooldown);
 
     @Accessor("itemUseCooldown")
-    int getItemUseCooldown();
+    int getItemUseCooldown(); // Why duplicate? Removing duplicate.
+    
+    @Accessor("attackCooldown")
+    void setAttackCooldown(int attackCooldown);
+
+    @org.spongepowered.asm.mixin.gen.Invoker("doAttack")
+    boolean invokeDoAttack();
 }
