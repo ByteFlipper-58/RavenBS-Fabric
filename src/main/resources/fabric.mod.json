@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "id": "ravenbs-fabric",
+  "version": "${version}",
+  "name": "RavenBS-Fabric",
+  "description": "RavenBS ported to Fabric 1.20.1",
+  "authors": [
+    "ByteFlipper",
+    "Ibragim837"
+  ],
+  "contact": {
+    "homepage": "https://ravenbs.xyz/",
+    "sources": "https://github.com/ByteFlipper-58/RavenBS-Fabric"
+  },
+  "license": "MIT",
+  "icon": "assets/ravenbs/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "xyz.ravenbs.RavenBSFabric"
+    ],
+    "client": [
+      "xyz.ravenbs.client.RavenBSFabricClient"
+    ]
+  },
+  "mixins": [
+    "ravenbs.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.16.9",
+    "minecraft": "~1.20.1",
+    "java": ">=17",
+    "fabric-api": "*"
+  },
+  "suggests": {
+    "another-mod": "*"
+  }
+}
