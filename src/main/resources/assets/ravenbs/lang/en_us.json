@@ -268,5 +268,7 @@
     "raven.setting.delete_profile": "Delete Profile",
     "raven.setting.rename_to": "Rename to",
     "raven.setting.apply_rename": "Apply Rename",
-    "raven.setting.name": "Name"
+    "raven.setting.name": "Name",
+    "raven.setting.ignore_depth": "Ignore Depth",
+    "raven.setting.glowing": "Glowing"
 }
