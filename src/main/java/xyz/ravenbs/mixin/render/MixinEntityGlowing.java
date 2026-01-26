@@ -1,6 +1,7 @@
 package xyz.ravenbs.mixin.render;
 
 import xyz.ravenbs.module.ModuleManager;
+import xyz.ravenbs.module.impl.render.Chams;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import org.spongepowered.asm.mixin.Mixin;
@@ -23,7 +24,9 @@ public abstract class MixinEntityGlowing {
         if (ModuleManager.chams != null && ModuleManager.chams.isEnabled()) {
             if (self instanceof PlayerEntity) {
                 if (self != net.minecraft.client.MinecraftClient.getInstance().player) {
-                    cir.setReturnValue(true);
+                    if (Chams.glowing != null && Chams.glowing.isToggled()) {
+                        cir.setReturnValue(true);
+                    }
                 }
             }
         }

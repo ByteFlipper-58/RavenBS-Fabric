@@ -67,7 +67,7 @@ public class ChamsRenderLayer extends RenderLayer {
                 .program(RenderPhase.ENTITY_TRANSLUCENT_PROGRAM) // Translucent for players
                 .texture(new RenderPhase.Texture(texture, false, false))
                 .transparency(RenderPhase.TRANSLUCENT_TRANSPARENCY)
-                .cull(RenderPhase.DISABLE_CULLING)
+                .cull(RenderPhase.ENABLE_CULLING)
                 .lightmap(RenderPhase.ENABLE_LIGHTMAP)
                 .overlay(RenderPhase.ENABLE_OVERLAY_COLOR)
                 .depthTest(RenderPhase.ALWAYS_DEPTH_TEST) // Classic "See through walls"
