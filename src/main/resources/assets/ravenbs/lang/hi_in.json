@@ -275,5 +275,6 @@
     "raven.update.new_version": "नया संस्करण उपलब्ध है: §a%s §7(वर्तमान: §c%s§7)",
     "raven.update.github_hover": "GitHub खोलने के लिए क्लिक करें",
     "raven.update.site_msg": "यहाँ भी उपलब्ध: ",
-    "raven.update.site_hover": "वेबसाइट पर जाने के लिए क्लिक करें"
+    "raven.update.site_hover": "वेबसाइट पर जाने के लिए क्लिक करें",
+    "raven.setting.style": "शैली (Style)"
 }

@@ -10,6 +10,8 @@
         "movement.MixinEntity",
         "render.MixinLivingEntityRenderer",
         "render.MixinBedBlockEntityRenderer",
+        "render.MixinChestBlockEntityRenderer",
+        "render.MixinShulkerBoxBlockEntityRenderer",
         "render.MixinEntityGlowing",
         "render.MixinCamera",
         "render.MixinGameRenderer",

@@ -35,7 +35,7 @@ public class ChamsVertexConsumerProvider implements VertexConsumerProvider {
 
             boolean hasOverlay = layer.getVertexFormat().getElements().contains(net.minecraft.client.render.VertexFormats.OVERLAY_ELEMENT);
             
-            if (hasOverlay && resolvedTexture != null) {
+            if (resolvedTexture != null) {
                 // Return a Dual Consumer that renders BOTH the normal layer (for correct depth/sorting)
                 // AND the Chams layer (for visibility through walls).
                 VertexConsumer normalBuffer = parent.getBuffer(layer);
