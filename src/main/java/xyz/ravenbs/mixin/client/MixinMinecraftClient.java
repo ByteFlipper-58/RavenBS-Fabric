@@ -23,7 +23,9 @@ public class MixinMinecraftClient {
     private void onTick(CallbackInfo ci) {
         // FastPlace
         if (ModuleManager.fastPlace != null && ModuleManager.fastPlace.isEnabled()) {
-            this.itemUseCooldown = (int) ModuleManager.fastPlace.getDelay();
+            if (this.player.getMainHandStack().getItem() instanceof net.minecraft.item.BlockItem) {
+                this.itemUseCooldown = (int) ModuleManager.fastPlace.getDelay();
+            }
         }
         
         // DelayRemover - click delay
