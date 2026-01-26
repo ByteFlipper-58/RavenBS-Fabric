@@ -188,140 +188,114 @@ public class ModuleManager {
     public static xyz.ravenbs.module.impl.render.Trajectories trajectories; // Maybe needed later?
 
     public void register() {
-        addModule(sprint = new Sprint());
-        addModule(speed = new Speed());
-        addModule(gui = new GuiModule());
-        addModule(fullBright = new FullBright());
-        addModule(esp = new ESP());
-        addModule(antiAFK = new AntiAFK());
-        addModule(autoJump = new AutoJump());
-        addModule(hud = new HUD());
-        
+        // --- Combat ---
         addModule(killAura = new KillAura());
-        addModule(velocity = new Velocity());
-        addModule(reach = new Reach());
         addModule(autoClicker = new AutoClicker());
         addModule(aimAssist = new AimAssist());
-        
-        addModule(noFall = new NoFall());
-        addModule(fly = new Fly());
-        addModule(fastPlace = new FastPlace());
-        addModule(safeWalk = new SafeWalk());
-        addModule(scaffold = new Scaffold());
-        addModule(fastBreak = new FastBreak());
-        
-        addModule(bedAura = new BedAura());
-        addModule(chestESP = new ChestESP());
-        addModule(antiVoid = new AntiVoid());
-        
-        addModule(hitBox = new HitBox());
+        addModule(reach = new Reach());
+        addModule(velocity = new Velocity());
         addModule(wTap = new WTap());
-        addModule(invMove = new InvMove());
-        addModule(noSlow = new NoSlow());
-        
-        addModule(autoTool = new AutoTool());
-        addModule(tracers = new Tracers());
-        addModule(nameTags = new NameTags());
-        addModule(bridgeInfo = new BridgeInfo());
-        
-        addModule(timer = new Timer());
-        
-        addModule(sumoFence = new SumoFence());
-        addModule(autoWeapon = new AutoWeapon());
-        
         addModule(new xyz.ravenbs.module.impl.combat.STap());
-        addModule(chams = new xyz.ravenbs.module.impl.render.Chams());
-        addModule(new xyz.ravenbs.module.impl.minigames.BedWars());
-        addModule(new xyz.ravenbs.module.impl.minigames.SkyWars());
-        
-        // Batch 1 & 2
-        addModule(new xyz.ravenbs.module.impl.player.AutoPlace());
-        addModule(new xyz.ravenbs.module.impl.player.WaterBucket());
-        addModule(new xyz.ravenbs.module.impl.combat.JumpReset());
-        addModule(noCameraClip = new xyz.ravenbs.module.impl.render.NoCameraClip());
-        addModule(noHurtCam = new xyz.ravenbs.module.impl.render.NoHurtCam());
-        
-        // Batch 2
-        addModule(nameHider = new xyz.ravenbs.module.impl.other.NameHider());
-        addModule(new xyz.ravenbs.module.impl.other.FakeLag());
+        addModule(hitBox = new HitBox());
         addModule(new xyz.ravenbs.module.impl.combat.BurstClicker());
-
-        addModule(new xyz.ravenbs.module.impl.movement.VClip());
-        
-        // Batch 3
-        addModule(antiBot = new xyz.ravenbs.module.impl.world.AntiBot());
-        addModule(new xyz.ravenbs.module.impl.player.AutoSwap());
-        
-        // Final Batch (Movement)
-        addModule(new xyz.ravenbs.module.impl.movement.BHop());
-        addModule(new xyz.ravenbs.module.impl.movement.Boost());
-        addModule(new xyz.ravenbs.module.impl.movement.KeepSprint());
-        addModule(new xyz.ravenbs.module.impl.movement.LongJump());
-        
-        // Final Batch (Player)
-        addModule(new xyz.ravenbs.module.impl.player.AntiFireball());
-        addModule(new xyz.ravenbs.module.impl.player.Blink());
-        addModule(new xyz.ravenbs.module.impl.player.Freecam());
-        addModule(new xyz.ravenbs.module.impl.player.NoRotate());
-        
-        // Final Batch (Render)
-        addModule(new xyz.ravenbs.module.impl.render.AntiShuffle());
-        addModule(bedESP = new xyz.ravenbs.module.impl.render.BedESP());
-        addModule(new xyz.ravenbs.module.impl.render.ItemESP());
-        addModule(new xyz.ravenbs.module.impl.render.MobESP());
-        addModule(new xyz.ravenbs.module.impl.render.Radar());
-        addModule(new xyz.ravenbs.module.impl.render.TargetHUD());
-        addModule(new xyz.ravenbs.module.impl.render.Trajectories());
-        addModule(new xyz.ravenbs.module.impl.render.BreakProgress());
-        
-        // Final Batch (World/Minigames/Other)
-        addModule(new xyz.ravenbs.module.impl.world.Weather());
-        addModule(new xyz.ravenbs.module.impl.minigames.AutoRequeue());
-        addModule(new xyz.ravenbs.module.impl.minigames.AutoWho());
-        
-        // Ported modules batch
-        addModule(new xyz.ravenbs.module.impl.render.Xray());
-        addModule(new xyz.ravenbs.module.impl.player.FastMine());
-        addModule(new xyz.ravenbs.module.impl.player.DelayRemover());
-        addModule(new xyz.ravenbs.module.impl.other.FakeChat());
-        addModule(new xyz.ravenbs.module.impl.other.LatencyAlerts());
-        addModule(new xyz.ravenbs.module.impl.minigames.MurderMystery());
-        addModule(new xyz.ravenbs.module.impl.other.ChatBypass());
-        addModule(new xyz.ravenbs.module.impl.player.InvManager());
-        
-        // Fun
-        addModule(new xyz.ravenbs.module.impl.fun.Spin());
-        addModule(new xyz.ravenbs.module.impl.fun.Derp());
-        
-        // Combat batch 2
         addModule(new xyz.ravenbs.module.impl.combat.ClickAssist());
         addModule(new xyz.ravenbs.module.impl.combat.Reduce());
         addModule(new xyz.ravenbs.module.impl.combat.RodAimbot());
         addModule(new xyz.ravenbs.module.impl.combat.TPAura());
-        
-        // Movement batch 2
+        addModule(new xyz.ravenbs.module.impl.combat.JumpReset());
+        addModule(autoWeapon = new AutoWeapon());
+
+        // --- Movement ---
+        addModule(speed = new Speed());
+        addModule(new xyz.ravenbs.module.impl.movement.BHop());
+        addModule(fly = new Fly());
+        addModule(new xyz.ravenbs.module.impl.movement.Boost());
+        addModule(sprint = new Sprint());
+        addModule(new xyz.ravenbs.module.impl.movement.KeepSprint());
+        addModule(new xyz.ravenbs.module.impl.movement.LongJump());
+        addModule(safeWalk = new SafeWalk());
+        addModule(autoJump = new AutoJump());
+        addModule(invMove = new InvMove());
+        addModule(noSlow = new NoSlow());
+        addModule(timer = new Timer());
         addModule(new xyz.ravenbs.module.impl.movement.StopMotion());
+        addModule(new xyz.ravenbs.module.impl.movement.VClip());
         addModule(new xyz.ravenbs.module.impl.movement.Teleport());
-        
-        // Render batch 2
+
+        // --- Player ---
+        addModule(noFall = new NoFall());
+        addModule(fastPlace = new FastPlace());
+        addModule(new xyz.ravenbs.module.impl.player.AutoPlace());
+        addModule(new xyz.ravenbs.module.impl.player.FastMine());
+        addModule(autoTool = new AutoTool());
+        addModule(new xyz.ravenbs.module.impl.player.InvManager());
+        addModule(new xyz.ravenbs.module.impl.player.AutoSwap());
+        addModule(new xyz.ravenbs.module.impl.player.WaterBucket());
+        addModule(new xyz.ravenbs.module.impl.player.Blink());
+        addModule(new xyz.ravenbs.module.impl.player.Freecam());
+        addModule(new xyz.ravenbs.module.impl.player.NoRotate());
+        addModule(antiVoid = new AntiVoid());
+        addModule(new xyz.ravenbs.module.impl.player.AntiFireball());
+        addModule(new xyz.ravenbs.module.impl.player.DelayRemover());
+
+        // --- Render ---
+        addModule(chams = new xyz.ravenbs.module.impl.render.Chams());
+        addModule(esp = new ESP());
+        addModule(new xyz.ravenbs.module.impl.render.PlayerESP());
+        addModule(new xyz.ravenbs.module.impl.render.MobESP());
+        addModule(chestESP = new ChestESP());
+        addModule(bedESP = new xyz.ravenbs.module.impl.render.BedESP());
+        addModule(new xyz.ravenbs.module.impl.render.ItemESP());
+        addModule(tracers = new Tracers());
+        addModule(nameTags = new NameTags());
+        addModule(fullBright = new FullBright());
+        addModule(hud = new HUD());
+        addModule(bridgeInfo = new BridgeInfo());
+        addModule(new xyz.ravenbs.module.impl.render.TargetHUD());
+        addModule(new xyz.ravenbs.module.impl.render.Radar());
+        addModule(trajectories = new xyz.ravenbs.module.impl.render.Trajectories());
+        addModule(new xyz.ravenbs.module.impl.render.Indicators());
         addModule(new xyz.ravenbs.module.impl.render.Potions());
-        
-        // Minigames batch 2
+        addModule(new xyz.ravenbs.module.impl.render.Shaders());
+        addModule(new xyz.ravenbs.module.impl.render.Xray());
+        addModule(new xyz.ravenbs.module.impl.render.AntiShuffle());
+        addModule(noCameraClip = new xyz.ravenbs.module.impl.render.NoCameraClip());
+        addModule(noHurtCam = new xyz.ravenbs.module.impl.render.NoHurtCam());
+        addModule(new xyz.ravenbs.module.impl.render.KeyStrokes());
+        addModule(new xyz.ravenbs.module.impl.render.ExtendCamera());
+        addModule(new xyz.ravenbs.module.impl.render.BreakProgress());
+
+        // --- World ---
+        addModule(scaffold = new Scaffold());
+        addModule(fastBreak = new FastBreak());
+        addModule(antiBot = new xyz.ravenbs.module.impl.world.AntiBot());
+        addModule(new xyz.ravenbs.module.impl.world.Weather());
+
+        // --- Minigames ---
+        addModule(bedAura = new BedAura());
+        addModule(new xyz.ravenbs.module.impl.minigames.BedWars());
+        addModule(new xyz.ravenbs.module.impl.minigames.SkyWars());
+        addModule(sumoFence = new SumoFence());
+        addModule(new xyz.ravenbs.module.impl.minigames.MurderMystery());
         addModule(new xyz.ravenbs.module.impl.minigames.DuelsStats());
         addModule(new xyz.ravenbs.module.impl.minigames.SpeedBuilders());
-        
-        // Final batch - all remaining ported modules
-        addModule(new xyz.ravenbs.module.impl.render.ExtendCamera());
-        addModule(new xyz.ravenbs.module.impl.render.Shaders());
-        addModule(new xyz.ravenbs.module.impl.render.Arrows());
-        addModule(new xyz.ravenbs.module.impl.render.PlayerESP());
-        addModule(new xyz.ravenbs.module.impl.render.Indicators());
-        addModule(new xyz.ravenbs.module.impl.render.KeyStrokes());
+        addModule(new xyz.ravenbs.module.impl.minigames.AutoRequeue());
+        addModule(new xyz.ravenbs.module.impl.minigames.AutoWho());
+
+        // --- Other / Fun ---
         addModule(new xyz.ravenbs.module.impl.other.Anticheat());
         addModule(new xyz.ravenbs.module.impl.other.ViewPackets());
-        
-        // Sort modules by name
-        modules.sort(Comparator.comparing(Module::getName));
+        addModule(nameHider = new xyz.ravenbs.module.impl.other.NameHider());
+        addModule(new xyz.ravenbs.module.impl.other.FakeLag());
+        addModule(new xyz.ravenbs.module.impl.other.LatencyAlerts());
+        addModule(new xyz.ravenbs.module.impl.other.FakeChat());
+        addModule(new xyz.ravenbs.module.impl.other.ChatBypass());
+        addModule(antiAFK = new AntiAFK());
+        addModule(new xyz.ravenbs.module.impl.fun.Spin());
+        addModule(new xyz.ravenbs.module.impl.fun.Derp());
+
+        // --- Client ---
+        addModule(gui = new GuiModule());
     }
     
     public void addModule(Module m) {

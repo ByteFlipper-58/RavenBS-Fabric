@@ -37,7 +37,7 @@ public class UpdateChecker {
                     String cleanCurrent = currentVersion.replace("v", "");
                     String cleanLatest = latestVersion.replace("v", "");
 
-                    if (!cleanCurrent.equals(cleanLatest)) {
+                    if (isNewer(cleanCurrent, cleanLatest)) {
                         isUpdateAvailable = true;
                     }
                 }
@@ -45,6 +45,21 @@ public class UpdateChecker {
                 xyz.ravenbs.RavenBSFabric.LOGGER.error("Update check failed", e);
             }
         }).start();
+    }
+
+    private static boolean isNewer(String current, String latest) {
+        try {
+            String[] v1 = current.split("\\.");
+            String[] v2 = latest.split("\\.");
+            int length = Math.max(v1.length, v2.length);
+            for (int i = 0; i < length; i++) {
+                int num1 = i < v1.length ? Integer.parseInt(v1[i]) : 0;
+                int num2 = i < v2.length ? Integer.parseInt(v2[i]) : 0;
+                if (num1 < num2) return true;
+                if (num1 > num2) return false;
+            }
+        } catch (Exception ignored) {}
+        return false;
     }
 
     public static void onJoin() {
