@@ -1,13 +1,11 @@
 @echo off
 set "PROJECT_DIR=C:\Users\ibrag\Documents\GitHub\RavenBS-Plus-Plus"
 set "MODS_DIR=C:\Users\ibrag\AppData\Roaming\.minecraft\mods"
-set "JAR_NAME=raven-bs-fabric-1.0.0.jar"
-set "BUILD_JAR=%PROJECT_DIR%\build\libs\%JAR_NAME%"
-set "TARGET_JAR=%MODS_DIR%\%JAR_NAME%"
 
 cd /d "%PROJECT_DIR%"
 echo Building project...
-call gradlew build
+rem Adding clean to ensure we only have the latest jar
+call gradlew clean build
 
 if %ERRORLEVEL% NEQ 0 (
     echo Build failed!
@@ -17,13 +15,14 @@ if %ERRORLEVEL% NEQ 0 (
 
 echo Build successful!
 
-if exist "%TARGET_JAR%" (
-    echo Deleting old mod...
-    del "%TARGET_JAR%"
+echo Deleting old RavenBS versions...
+if exist "%MODS_DIR%\raven-bs-fabric-*.jar" (
+    del "%MODS_DIR%\raven-bs-fabric-*.jar"
 )
 
 echo Copying new mod...
-copy "%BUILD_JAR%" "%MODS_DIR%"
+rem Copy all non-sources/dev jars (simple wildcard copy, usually fine)
+copy "%PROJECT_DIR%\build\libs\raven-bs-fabric-*.jar" "%MODS_DIR%"
 
 echo Done!
 pause

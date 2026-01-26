@@ -270,5 +270,10 @@
     "raven.setting.apply_rename": "Применить имя",
     "raven.setting.name": "Название",
     "raven.setting.ignore_depth": "Игнорировать глубину",
-    "raven.setting.glowing": "Свечение"
+    "raven.setting.glowing": "Свечение",
+    "raven.prefix": "§8[§bRavenBS§8] §7",
+    "raven.update.new_version": "Доступна новая версия: §a%s §7(Текущая: §c%s§7)",
+    "raven.update.github_hover": "Нажмите, чтобы открыть GitHub",
+    "raven.update.site_msg": "Также доступно на: ",
+    "raven.update.site_hover": "Нажмите, чтобы перейти на сайт"
 }

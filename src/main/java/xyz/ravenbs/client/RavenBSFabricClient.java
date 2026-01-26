@@ -46,6 +46,18 @@ public class RavenBSFabricClient implements ClientModInitializer {
         
         Runtime.getRuntime().addShutdownHook(new Thread(ConfigManager::saveConfig));
 
+        // Update Checker
+        try {
+            xyz.ravenbs.RavenBSFabric.LOGGER.info("Starting Update Checker...");
+            xyz.ravenbs.utility.UpdateChecker.checkForUpdates();
+        } catch (Exception e) {
+            xyz.ravenbs.RavenBSFabric.LOGGER.error("Failed to start Update Checker", e);
+        }
+        
+        net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
+             xyz.ravenbs.utility.UpdateChecker.onJoin();
+        });
+
         System.out.println("RavenBS-Fabric initialized!");
     }
 }
