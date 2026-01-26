@@ -245,7 +245,7 @@ public class ModuleManager {
         addModule(nameHider = new xyz.ravenbs.module.impl.other.NameHider());
         addModule(new xyz.ravenbs.module.impl.other.FakeLag());
         addModule(new xyz.ravenbs.module.impl.combat.BurstClicker());
-        addModule(new xyz.ravenbs.module.impl.combat.BurstClicker());
+
         addModule(new xyz.ravenbs.module.impl.movement.VClip());
         
         // Batch 3
