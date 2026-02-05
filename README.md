@@ -22,6 +22,21 @@ RavenBS-Fabric uses a JSON-based configuration system.
 *   **Load Config:** Use command `.config load <name>` (e.g. `.config load legit`)
 *   **Share Configs:** Simply copy `.json` files to the profiles folder.
 
+## 💻 Chat Commands
+
+| Command | Description | Example |
+| :--- | :--- | :--- |
+| `.bind <module> <key>` | Bind a module to a key. | `.bind KillAura R` |
+| `.toggle <module>` | Toggle a module. | `.toggle HUD` |
+| `.friend add/remove <name>` | Add or remove a friend (KillAura ignores friends). | `.friend add Alex` |
+| `.friend list` | Show your friends list. | `.friend list` |
+| `.config save/load <name>` | Save or load a config profile. | `.config save legit` |
+| `.config list` | List available profiles. | `.config list` |
+| `.updatecheck on/off/status` | Enable/disable or check the update checker. | `.updatecheck status` |
+| `.help` | Show all commands. | `.help` |
+
+You can disable the update checker at any time with `.updatecheck off` and re-enable it with `.updatecheck on`.
+
 ## Development
 
 ### Prerequisites

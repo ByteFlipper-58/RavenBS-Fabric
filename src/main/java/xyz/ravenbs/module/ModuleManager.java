@@ -36,17 +36,23 @@ import xyz.ravenbs.module.impl.combat.AutoWeapon;
 import xyz.ravenbs.event.PreMotionEvent;
 import xyz.ravenbs.event.PostMotionEvent;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ModuleManager {
     public static List<Module> modules = new ArrayList<>();
+    private static final Logger LOGGER = LoggerFactory.getLogger("ModuleManager");
     
     public static void onPreMotion(xyz.ravenbs.event.PreMotionEvent e) {
         for (Module m : modules) {
             if (m.isEnabled()) {
-                m.onPreMotion(e);
+                try {
+                    m.onPreMotion(e);
+                } catch (Throwable t) {
+                    logModuleError(m, "onPreMotion", t);
+                }
             }
         }
     }
@@ -54,7 +60,11 @@ public class ModuleManager {
     public static void onPostMotion(xyz.ravenbs.event.PostMotionEvent e) {
         for (Module m : modules) {
             if (m.isEnabled()) {
-                m.onPostMotion(e);
+                try {
+                    m.onPostMotion(e);
+                } catch (Throwable t) {
+                    logModuleError(m, "onPostMotion", t);
+                }
             }
         }
     }
@@ -62,7 +72,11 @@ public class ModuleManager {
     public static void onPreUpdate() {
         for (Module m : modules) {
             if (m.isEnabled()) {
-                m.onPreUpdate();
+                try {
+                    m.onPreUpdate();
+                } catch (Throwable t) {
+                    logModuleError(m, "onPreUpdate", t);
+                }
             }
         }
     }
@@ -70,24 +84,40 @@ public class ModuleManager {
     public static void onPostUpdate() {
         for (Module m : modules) {
             if (m.isEnabled()) {
-                m.onPostUpdate();
+                try {
+                    m.onPostUpdate();
+                } catch (Throwable t) {
+                    logModuleError(m, "onPostUpdate", t);
+                }
             }
         }
     }
 
     public static void onUpdate() {
         for (Module m : modules) {
-             m.onKeyBind();
-             if (m.isEnabled()) {
-                 m.onUpdate();
-             }
+            try {
+                m.onKeyBind();
+            } catch (Throwable t) {
+                logModuleError(m, "onKeyBind", t);
+            }
+            if (m.isEnabled()) {
+                try {
+                    m.onUpdate();
+                } catch (Throwable t) {
+                    logModuleError(m, "onUpdate", t);
+                }
+            }
         }
     }
     
     public static void onReceivePacket(xyz.ravenbs.event.ReceivePacketEvent e) {
         for (Module m : modules) {
             if (m.isEnabled()) {
-                m.onReceivePacket(e);
+                try {
+                    m.onReceivePacket(e);
+                } catch (Throwable t) {
+                    logModuleError(m, "onReceivePacket", t);
+                }
             }
         }
     }
@@ -102,7 +132,11 @@ public class ModuleManager {
         }
         for (Module m : modules) {
             if (m.isEnabled()) {
-                m.onSendPacket(e);
+                try {
+                    m.onSendPacket(e);
+                } catch (Throwable t) {
+                    logModuleError(m, "onSendPacket", t);
+                }
             }
         }
     }
@@ -110,7 +144,11 @@ public class ModuleManager {
     public static void onRenderWorld(net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext context) {
         for (Module m : modules) {
             if (m.isEnabled()) {
-                m.onRenderWorld(context);
+                try {
+                    m.onRenderWorld(context);
+                } catch (Throwable t) {
+                    logModuleError(m, "onRenderWorld", t);
+                }
             }
         }
     }
@@ -118,7 +156,11 @@ public class ModuleManager {
     public static void onRender(net.minecraft.client.gui.DrawContext context, float tickDelta) {
         for (Module m : modules) {
             if (m.isEnabled()) {
-                m.onRender(context, tickDelta);
+                try {
+                    m.onRender(context, tickDelta);
+                } catch (Throwable t) {
+                    logModuleError(m, "onRender", t);
+                }
             }
         }
     }
@@ -300,6 +342,10 @@ public class ModuleManager {
     
     public void addModule(Module m) {
         modules.add(m);
+    }
+    
+    private static void logModuleError(Module module, String phase, Throwable t) {
+        LOGGER.error("Module {} threw during {}", module.getName(), phase, t);
     }
     
     public static Module getModule(String name) {

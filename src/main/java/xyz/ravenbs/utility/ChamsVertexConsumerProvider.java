@@ -22,6 +22,13 @@ public class ChamsVertexConsumerProvider implements VertexConsumerProvider {
     @Override
     public VertexConsumer getBuffer(RenderLayer layer) {
         if (ignoreDepth) {
+            // Only apply Chams to layers that use the specific entity vertex format.
+            // Text rendering (nametags) and other UI elements use different formats and will crash
+            // if we try to provide overlay/normal data to them.
+            if (layer.getVertexFormat() != VertexFormats.POSITION_COLOR_TEXTURE_OVERLAY_LIGHT_NORMAL) {
+                return parent.getBuffer(layer);
+            }
+
             // Attempt to extract the texture
             String layerStr = layer.toString();
             Identifier resolvedTexture = this.texture;
@@ -33,8 +40,6 @@ public class ChamsVertexConsumerProvider implements VertexConsumerProvider {
                 }
             } catch (Exception ignored) {}
 
-            boolean hasOverlay = layer.getVertexFormat().getElements().contains(net.minecraft.client.render.VertexFormats.OVERLAY_ELEMENT);
-            
             if (resolvedTexture != null) {
                 // Return a Dual Consumer that renders BOTH the normal layer (for correct depth/sorting)
                 // AND the Chams layer (for visibility through walls).

@@ -2,7 +2,13 @@ package xyz.ravenbs.utility;
 
 import xyz.ravenbs.module.ModuleManager;
 import xyz.ravenbs.module.Module;
+import net.minecraft.client.util.InputUtil;
+import net.minecraft.client.resource.language.I18n;
+import java.io.File;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class CommandManager {
     
@@ -18,8 +24,9 @@ public class CommandManager {
             case "help":
                 Utils.sendMessage("§bRavenBS Fabric Commands:");
                 Utils.sendMessage("§7.bind <module> <key> - Bind module");
-                Utils.sendMessage("§7.friend add/remove <name> - Manage friends");
-                Utils.sendMessage("§7.config save/load <name> - Manage configs");
+                Utils.sendMessage(tr("raven.command.help.friend"));
+                Utils.sendMessage(tr("raven.command.help.config"));
+                Utils.sendMessage(tr("raven.command.help.update"));
                 return true;
                 
             case "bind":
@@ -32,47 +39,70 @@ public class CommandManager {
                     Utils.sendMessage("§cModule not found: " + args[1]);
                     return true;
                 }
-                // Fabric/GLFW Key mapping
-                int key = -1;
-                try {
-                    // Start of simple lookup
-                    String k = args[2].toUpperCase();
-                    if (k.length() == 1) {
-                         key = net.minecraft.client.util.InputUtil.fromTranslationKey("key.keyboard." + k.toLowerCase()).getCode();
-                    } else {
-                         // Handle special keys
-                         // Simplified: just assume valid integer or use InputUtil
-                         // For now, let's use a naive lookup or error out
-                         java.lang.reflect.Field f = org.lwjgl.glfw.GLFW.class.getField("GLFW_KEY_" + k);
-                         key = f.getInt(null);
-                    }
-                } catch (Exception e) {
-                     Utils.sendMessage("§cInvalid key: " + args[2]);
-                     return true;
+                int keycode = resolveKeycode(args[2]);
+                if (keycode == Integer.MIN_VALUE) {
+                    Utils.sendMessage("§cInvalid key: " + args[2]);
+                    return true;
                 }
-                m.setBind(key);
+                m.setBind(keycode);
                 Utils.sendMessage("§aBound " + m.getName() + " to " + args[2].toUpperCase());
                 return true;
                 
             case "friend":
             case "f":
+                if (args.length < 2) {
+                    Utils.sendMessage(tr("raven.command.friend.usage.full"));
+                    return true;
+                }
+                if (args[1].equalsIgnoreCase("list")) {
+                    if (FriendManager.friends.isEmpty()) {
+                        Utils.sendMessage(tr("raven.command.friend.list.empty"));
+                    } else {
+                        Utils.sendMessage(tr("raven.command.friend.list", String.join(", ", FriendManager.friends)));
+                    }
+                    return true;
+                }
+                if (args[1].equalsIgnoreCase("clear")) {
+                    FriendManager.clear();
+                    return true;
+                }
                 if (args.length < 3) {
-                    Utils.sendMessage("§cUsage: .friend add/remove <name>");
+                    Utils.sendMessage(tr("raven.command.friend.usage.short"));
                     return true;
                 }
                 if (args[1].equalsIgnoreCase("add")) {
                     FriendManager.addFriend(args[2]);
                 } else if (args[1].equalsIgnoreCase("remove")) {
                     FriendManager.removeFriend(args[2]);
-                } else if (args[1].equalsIgnoreCase("clear")) {
-                    FriendManager.clear();
                 }
                 return true;
             
             case "config":
             case "c":
+                if (args.length < 2) {
+                    Utils.sendMessage(tr("raven.command.config.usage.full"));
+                    return true;
+                }
+                if (args[1].equalsIgnoreCase("list")) {
+                    File dir = xyz.ravenbs.config.ConfigManager.getProfilesDirectory();
+                    String[] files = dir.list((d, name) -> name.endsWith(".json"));
+                    if (files == null || files.length == 0) {
+                        Utils.sendMessage(tr("raven.command.config.list.empty"));
+                        return true;
+                    }
+                    String currentProfile = xyz.ravenbs.config.ConfigManager.getCurrentProfileName();
+                    if (currentProfile != null && !currentProfile.isEmpty()) {
+                        Utils.sendMessage(tr("raven.command.config.current", currentProfile));
+                    }
+                    String names = Arrays.stream(files)
+                            .map(f -> f.replace(".json", ""))
+                            .sorted(String::compareToIgnoreCase)
+                            .collect(Collectors.joining(", "));
+                    Utils.sendMessage(tr("raven.command.config.list", names));
+                    return true;
+                }
                 if (args.length < 3) {
-                    Utils.sendMessage("§cUsage: .config save/load <name>");
+                    Utils.sendMessage(tr("raven.command.config.usage.short"));
                     return true;
                 }
                 String profileName = args[2];
@@ -88,6 +118,27 @@ public class CommandManager {
                     } else {
                         Utils.sendMessage("§cConfig not found.");
                     }
+                }
+                return true;
+
+            case "updatecheck":
+            case "update":
+                if (args.length < 2) {
+                    Utils.sendMessage(tr("raven.command.update.usage"));
+                    return true;
+                }
+                String toggle = args[1].toLowerCase();
+                if (toggle.equals("on") || toggle.equals("enable")) {
+                    UpdateChecker.setEnabled(true);
+                    UpdateChecker.checkForUpdates();
+                    Utils.sendMessage(tr("raven.command.update.enabled"));
+                } else if (toggle.equals("off") || toggle.equals("disable")) {
+                    UpdateChecker.setEnabled(false);
+                    Utils.sendMessage(tr("raven.command.update.disabled"));
+                } else if (toggle.equals("status")) {
+                    Utils.sendMessage(UpdateChecker.isEnabled() ? tr("raven.command.update.status_on") : tr("raven.command.update.status_off"));
+                } else {
+                    Utils.sendMessage(tr("raven.command.update.usage"));
                 }
                 return true;
                 
@@ -148,6 +199,8 @@ public class CommandManager {
             addIfMatch(list, current, ".friend", "Manage friends (add/remove)");
             addIfMatch(list, current, ".config", "Manage config profiles");
             addIfMatch(list, current, ".toggle", "Toggle a module");
+            addIfMatch(list, current, ".updatecheck", tr("raven.suggest.update.toggle"));
+            addIfMatch(list, current, ".update", tr("raven.suggest.update.alias"));
             // Aliases
             addIfMatch(list, current, ".t", "Alias for .toggle");
             addIfMatch(list, current, ".f", "Alias for .friend");
@@ -173,9 +226,15 @@ public class CommandManager {
                 addIfMatch(list, arg, "add", "Add a friend");
                 addIfMatch(list, arg, "remove", "Remove a friend");
                 addIfMatch(list, arg, "clear", "Clear all friends");
+                addIfMatch(list, arg, "list", tr("raven.suggest.friend.list"));
             } else if (cmd.equals(".config") || cmd.equals(".c")) {
                 addIfMatch(list, arg, "save", "Save current profile");
                 addIfMatch(list, arg, "load", "Load a profile");
+                addIfMatch(list, arg, "list", tr("raven.suggest.config.list"));
+            } else if (cmd.equals(".updatecheck") || cmd.equals(".update")) {
+                addIfMatch(list, arg, "on", tr("raven.suggest.update.on"));
+                addIfMatch(list, arg, "off", tr("raven.suggest.update.off"));
+                addIfMatch(list, arg, "status", tr("raven.suggest.update.status"));
             }
             
             // Sort list?
@@ -193,6 +252,83 @@ public class CommandManager {
     private static void addIfMatch(java.util.List<Suggestion> list, String input, String target, String tooltip) {
         if (target.toLowerCase().startsWith(input.toLowerCase())) {
             list.add(new Suggestion(target, tooltip));
+        }
+    }
+
+    private static String tr(String key, Object... args) {
+        return I18n.translate(key, args);
+    }
+
+    private static final Map<String, String> KEY_ALIASES = new HashMap<>();
+    static {
+        KEY_ALIASES.put("shift", "key.keyboard.left.shift");
+        KEY_ALIASES.put("lshift", "key.keyboard.left.shift");
+        KEY_ALIASES.put("rshift", "key.keyboard.right.shift");
+        KEY_ALIASES.put("ctrl", "key.keyboard.left.control");
+        KEY_ALIASES.put("lctrl", "key.keyboard.left.control");
+        KEY_ALIASES.put("rctrl", "key.keyboard.right.control");
+        KEY_ALIASES.put("alt", "key.keyboard.left.alt");
+        KEY_ALIASES.put("lalt", "key.keyboard.left.alt");
+        KEY_ALIASES.put("ralt", "key.keyboard.right.alt");
+        KEY_ALIASES.put("space", "key.keyboard.space");
+        KEY_ALIASES.put("enter", "key.keyboard.enter");
+        KEY_ALIASES.put("return", "key.keyboard.enter");
+        KEY_ALIASES.put("esc", "key.keyboard.escape");
+        KEY_ALIASES.put("escape", "key.keyboard.escape");
+        KEY_ALIASES.put("tab", "key.keyboard.tab");
+        KEY_ALIASES.put("backspace", "key.keyboard.backspace");
+        KEY_ALIASES.put("delete", "key.keyboard.delete");
+        KEY_ALIASES.put("home", "key.keyboard.home");
+        KEY_ALIASES.put("end", "key.keyboard.end");
+        KEY_ALIASES.put("pageup", "key.keyboard.page.up");
+        KEY_ALIASES.put("pagedown", "key.keyboard.page.down");
+        KEY_ALIASES.put("up", "key.keyboard.up");
+        KEY_ALIASES.put("down", "key.keyboard.down");
+        KEY_ALIASES.put("left", "key.keyboard.left");
+        KEY_ALIASES.put("right", "key.keyboard.right");
+    }
+
+    private static int resolveKeycode(String raw) {
+        if (raw == null || raw.isEmpty()) return Integer.MIN_VALUE;
+        String normalized = raw.trim().toLowerCase();
+
+        Integer mouseCode = parseMouseKey(normalized);
+        if (mouseCode != null) {
+            return mouseCode;
+        }
+
+        String translationKey = KEY_ALIASES.getOrDefault(normalized, normalized);
+        String candidate = translationKey.startsWith("key.") ? translationKey : "key.keyboard." + translationKey;
+
+        InputUtil.Key key = InputUtil.fromTranslationKey(candidate);
+        if (key == InputUtil.UNKNOWN_KEY && !translationKey.startsWith("key.")) {
+            key = InputUtil.fromTranslationKey("key." + translationKey);
+        }
+
+        if (key == InputUtil.UNKNOWN_KEY) {
+            return Integer.MIN_VALUE;
+        }
+        return key.getCode();
+    }
+
+    private static Integer parseMouseKey(String normalized) {
+        if (!normalized.startsWith("mouse")) {
+            return null;
+        }
+        String digits = normalized.replace("mouse", "").replace("button", "");
+        if (digits.isEmpty()) {
+            return null;
+        }
+        try {
+            int mouseIndex = Integer.parseInt(digits);
+            if (mouseIndex <= 0) {
+                return null;
+            }
+            // GLFW mouse buttons start at 0, user-friendly numbering starts at 1
+            int button = mouseIndex - 1;
+            return -100 - button;
+        } catch (NumberFormatException e) {
+            return null;
         }
     }
 }
