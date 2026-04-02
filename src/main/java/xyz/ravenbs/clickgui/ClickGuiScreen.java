@@ -17,6 +17,22 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ClickGuiScreen extends Screen {
+    private static final int SETTINGS_PANEL_WIDTH = 140;
+
+    private static final class SettingsLayout {
+        final int x;
+        final int y;
+        final int totalHeight;
+        final int contentStartY;
+
+        SettingsLayout(int x, int y, int totalHeight, int contentStartY) {
+            this.x = x;
+            this.y = y;
+            this.totalHeight = totalHeight;
+            this.contentStartY = contentStartY;
+        }
+    }
+
     // Cascading State
     private static final List<CategoryComponent> categories = new ArrayList<>();
     
@@ -120,11 +136,6 @@ public class ClickGuiScreen extends Screen {
         int availableH = this.height - modY - 10; // 10px padding from bottom
         if (availableH < 50) availableH = 50; // Minimum height
         
-        // ... scrolling logic omitted for brevity, assuming replace logic works with chunks ...
-        // Actually I need to replace the whole method to accept the changes fully properly or target chunks.
-        // Let's replace the whole method to be safe with context.
-        
-        // Copying method body but injecting Width spoofing
         // Check if we need scrolling
         boolean needsScroll = totalH > availableH;
         int visibleH = needsScroll ? availableH : totalH;
@@ -157,9 +168,7 @@ public class ClickGuiScreen extends Screen {
         
         int currentY = modY - modulesScrollY;
         
-        // SPOOF WIDTH
-        int originalCatWidth = cat.width;
-        cat.width = modW;
+        cat.setLayoutOverride(modX, modY, modW, modulesScrollY);
         
         for (Component c : modules) {
             if (c instanceof ModuleComponent) {
@@ -200,8 +209,7 @@ public class ClickGuiScreen extends Screen {
             }
         }
         
-        // RESTORE WIDTH
-        cat.width = originalCatWidth;
+        cat.clearLayoutOverride();
         
         if (needsScroll) {
             com.mojang.blaze3d.systems.RenderSystem.disableScissor();
@@ -210,7 +218,7 @@ public class ClickGuiScreen extends Screen {
     
     private void renderSettings(DrawContext context, int mouseX, int mouseY, ModuleComponent mod, int x, int y, float delta) {
         List<Component> settings = mod.getSettings();
-        int setW = 140; // Wider for text
+        int setW = SETTINGS_PANEL_WIDTH; // Wider for text
         
         // Wrap Description
         List<String> descLines = new ArrayList<>();
@@ -257,89 +265,46 @@ public class ClickGuiScreen extends Screen {
             currentY += 6; // Padding from desc to items
         }
 
-        // Coordinate Spoofing
         CategoryComponent cat = mod.getParent();
-        int originalCatX = cat.x;
-        int originalCatY = cat.y;
-        int originalCatWidth = cat.width; // SAVE WIDTH
-        
-        cat.x = x; // Align X
-        cat.y = currentY - cat.height - mod.getOffset() - 16; 
-        cat.width = setW; // SPOOF WIDTH
+        cat.setLayoutOverride(x, currentY - cat.height - mod.getOffset() - 16, setW, 0);
         
         for (Component s : settings) {
              s.render(context, mouseX, mouseY, delta);
              currentY += s.getHeight();
         }
-        
-        // Restore
-        cat.x = originalCatX;
-        cat.y = originalCatY;
-        cat.width = originalCatWidth; // RESTORE WIDTH
+
+        cat.clearLayoutOverride();
     }
     
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
          // Route based on Sticky State
-         if (stickyModule != null) { // Check if stickyModule is not null first
-                // Calculate position just like render...
-                int modX = stickyCategory.x + stickyCategory.width; // No gap
-                int modW = (stickyCategory.category == ModuleCategory.profiles) ? 140 : 110;
-                int modsTotalH = stickyCategory.getModules().size() * 16;
-                int modY = getModulePanelY(stickyCategory, modsTotalH);
-                
-                // Clamp fallback just in case
-                if (modY < 5) modY = 5;
-               
-               // Account for scroll offset when calculating module item position
-               int modItemY = modY + (stickyCategory.getModules().indexOf(stickyModule)) * 16 - modulesScrollY;
-               
-               int setX = modX + modW; // No gap
-               // Clamp to visible area (same as renderSettings call in renderModules)
-               int setY = Math.max(modItemY, modY);
-               
-               // Recalculate Description Height
-               int descH = 0;
-               if (stickyModule.getDescription() != null && !stickyModule.getDescription().isEmpty()) {
-                    // Approximate height logic from render...
-                    String fullDesc = "§7" + stickyModule.getDescription();
-                    int wrapWidth = 140 - 10;
-                    net.minecraft.client.font.TextRenderer tr = net.minecraft.client.MinecraftClient.getInstance().textRenderer;
-                    int lines = tr.wrapLines(Text.of(fullDesc), wrapWidth).size();
-                    descH = (lines * 10) + 6;
-               }
-               
-               int setTotalH = descH;
-               for(Component s : stickyModule.getSettings()) setTotalH += s.getHeight();
-               if (setY + setTotalH > this.height) setY = this.height - setTotalH - 5;
-               if (setY < 5) setY = 5;
-               
-               int contentStartY = setY + descH;
-               
-                if (mouseX >= setX && mouseX <= setX + 140 && mouseY >= setY && mouseY <= setY + setTotalH) {
-                    // Hack: We must spoof the coordinates for `mouseClicked` too!
+         if (stickyModule != null && stickyCategory != null) {
+                SettingsLayout settingsLayout = getSettingsLayout(stickyCategory, stickyModule);
+                if (settingsLayout != null
+                        && mouseX >= settingsLayout.x
+                        && mouseX <= settingsLayout.x + SETTINGS_PANEL_WIDTH
+                        && mouseY >= settingsLayout.y
+                        && mouseY <= settingsLayout.y + settingsLayout.totalHeight) {
                     CategoryComponent cat = stickyModule.getParent();
-                    int originalCatX = cat.x;
-                    int originalCatY = cat.y;
-                    int originalCatWidth = cat.width; // SAVE
-                    
-                    cat.x = setX;
-                    cat.y = contentStartY - cat.height - stickyModule.getOffset() - 16;
-                    cat.width = 140; // SPOOF
-                    
+                    cat.setLayoutOverride(
+                            settingsLayout.x,
+                            settingsLayout.contentStartY - cat.height - stickyModule.getOffset() - 16,
+                            SETTINGS_PANEL_WIDTH,
+                            0
+                    );
+
                     boolean handled = false;
-                     for(Component s : stickyModule.getSettings()) {
-                         if (s.mouseClicked(mouseX, mouseY, button)) {
-                             handled = true;
-                             break;
-                         }
-                     }
-                     
-                     cat.x = originalCatX;
-                     cat.y = originalCatY;
-                     cat.width = originalCatWidth; // RESTORE
-                     
-                     if (handled) return true;
+                    for(Component s : stickyModule.getSettings()) {
+                        if (s.mouseClicked(mouseX, mouseY, button)) {
+                            handled = true;
+                            break;
+                        }
+                    }
+
+                    cat.clearLayoutOverride();
+
+                    if (handled) return true;
                 }
          }
          
@@ -376,8 +341,24 @@ public class ClickGuiScreen extends Screen {
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
          if (stickyModule != null) {
-             for(Component s : stickyModule.getSettings()) {
-                 if (s.mouseReleased(mouseX, mouseY, button)) return true;
+             SettingsLayout settingsLayout = stickyCategory != null ? getSettingsLayout(stickyCategory, stickyModule) : null;
+             CategoryComponent cat = stickyModule.getParent();
+             if (settingsLayout != null) {
+                 cat.setLayoutOverride(
+                         settingsLayout.x,
+                         settingsLayout.contentStartY - cat.height - stickyModule.getOffset() - 16,
+                         SETTINGS_PANEL_WIDTH,
+                         0
+                 );
+             }
+             try {
+                 for(Component s : stickyModule.getSettings()) {
+                     if (s.mouseReleased(mouseX, mouseY, button)) return true;
+                 }
+             } finally {
+                 if (settingsLayout != null) {
+                     cat.clearLayoutOverride();
+                 }
              }
          }
          return super.mouseReleased(mouseX, mouseY, button);
@@ -464,31 +445,12 @@ public class ClickGuiScreen extends Screen {
                    // Ensure it has something to show
                    boolean hasContent = stickyModule.hasSettings() || (stickyModule.getDescription() != null && !stickyModule.getDescription().isEmpty());
                    if (hasContent) {
-                      int setX = modX + modW; // No gap
-                      int setW = 140;
-                      // Account for scroll offset
-                      int modItemY = modY + (stickyCategory.getModules().indexOf(stickyModule)) * 16 - modulesScrollY;
-                      // Clamp to visible area
-                      int setY = Math.max(modItemY, modY);
-                       int setTotalH = 0;
-                       // Rough calc needed for hitbox...
-                       int descH = 0;
-                       if (stickyModule.getDescription() != null && !stickyModule.getDescription().isEmpty()) {
-                            // Approx:
-                            String fullDesc = "§7" + stickyModule.getDescription();
-                            int wrapWidth = setW - 10;
-                            net.minecraft.client.font.TextRenderer tr = net.minecraft.client.MinecraftClient.getInstance().textRenderer;
-                            int lines = tr.wrapLines(Text.of(fullDesc), wrapWidth).size();
-                            descH = (lines * 10) + 6;
-                       }
-                       setTotalH += descH;
-                       
-                       for(Component s : stickyModule.getSettings()) setTotalH += s.getHeight();
-                       
-                       if (setY + setTotalH > this.height) setY = this.height - setTotalH - 5;
-                       if (setY < 5) setY = 5;
-                       
-                       if (mouseX >= setX && mouseX < setX + setW && mouseY >= setY && mouseY < setY + setTotalH) {
+                      SettingsLayout settingsLayout = getSettingsLayout(stickyCategory, stickyModule);
+                      if (settingsLayout != null
+                              && mouseX >= settingsLayout.x
+                              && mouseX < settingsLayout.x + SETTINGS_PANEL_WIDTH
+                              && mouseY >= settingsLayout.y
+                              && mouseY < settingsLayout.y + settingsLayout.totalHeight) {
                            return; // Keep open
                        }
                    }
@@ -535,6 +497,43 @@ public class ClickGuiScreen extends Screen {
 
     @Override
     public boolean shouldPause() { return false; }
+
+    private SettingsLayout getSettingsLayout(CategoryComponent category, ModuleComponent module) {
+        boolean hasContent = module.hasSettings() || (module.getDescription() != null && !module.getDescription().isEmpty());
+        if (!hasContent) {
+            return null;
+        }
+
+        int modX = category.x + category.width;
+        int modW = (category.category == ModuleCategory.profiles) ? 140 : 110;
+        int totalH = category.getModules().size() * 16;
+        int modY = getModulePanelY(category, totalH);
+        if (modY < 5) {
+            modY = 5;
+        }
+
+        int modItemY = modY + category.getModules().indexOf(module) * 16 - modulesScrollY;
+        int setX = modX + modW;
+        int setY = Math.max(modItemY, modY);
+
+        int descH = 0;
+        if (module.getDescription() != null && !module.getDescription().isEmpty()) {
+            net.minecraft.client.font.TextRenderer tr = net.minecraft.client.MinecraftClient.getInstance().textRenderer;
+            int lines = tr.wrapLines(Text.of("§7" + module.getDescription()), SETTINGS_PANEL_WIDTH - 10).size();
+            descH = (lines * 10) + 6;
+        }
+
+        int settingsHeight = descH;
+        for(Component s : module.getSettings()) settingsHeight += s.getHeight();
+        if (settingsHeight == 0) {
+            return null;
+        }
+
+        if (setY + settingsHeight > this.height) setY = this.height - settingsHeight - 5;
+        if (setY < 5) setY = 5;
+
+        return new SettingsLayout(setX, setY, settingsHeight, setY + descH);
+    }
 
     private int getModulePanelY(CategoryComponent cat, int totalH) {
         int modY = cat.y;

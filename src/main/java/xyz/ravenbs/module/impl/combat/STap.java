@@ -5,7 +5,6 @@ import xyz.ravenbs.event.PreMotionEvent;
 import xyz.ravenbs.module.Module;
 import xyz.ravenbs.module.ModuleCategory;
 import xyz.ravenbs.module.setting.impl.SliderSetting;
-import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.Entity;
 
 public class STap extends Module {
@@ -30,10 +29,7 @@ public class STap extends Module {
         if (isHolding) {
             if (System.currentTimeMillis() - startHoldTime > delay.getInput()) {
                 isHolding = false;
-                // Since we can't easily "unpress" S programmatically without MixinKeyBinding,
-                // we usually rely on "stopping sprint" or "setting velocity" or actual KeyBinding press.
-                // For Fabric, we can set KeyBinding.setPressed if valid.
-                net.minecraft.client.option.KeyBinding.setKeyPressed(mc.options.backKey.getDefaultKey(), false);
+                syncBackKeyState();
             }
         }
     }
@@ -58,6 +54,10 @@ public class STap extends Module {
     
     // Public method to be called by KillAura or Mixin
     public void onAttack(Entity target) {
+        if (mc.player == null || mc.options == null || target == null) {
+            return;
+        }
+
         if (Math.random() * 100 > chance.getInput()) return;
         
         if (mc.player.distanceTo(target) <= range.getInput()) {
@@ -66,14 +66,24 @@ public class STap extends Module {
     }
     
     private void startSTap() {
-        // Press S key
         isHolding = true;
         startHoldTime = System.currentTimeMillis();
-        net.minecraft.client.option.KeyBinding.setKeyPressed(mc.options.backKey.getDefaultKey(), true);
+        mc.options.backKey.setPressed(true);
     }
-    
-    // To make this fully functional, we need to call `STap.onAttack` from:
-    // 1. KillAura
-    // 2. MixinMinecraftClient (for manual attacks)
-    // For now, I will commit the class structure so it exists.
+
+    @Override
+    public void onDisable() {
+        isHolding = false;
+        syncBackKeyState();
+    }
+
+    private void syncBackKeyState() {
+        if (mc.options == null || mc.getWindow() == null) {
+            return;
+        }
+
+        int keyCode = ((xyz.ravenbs.mixin.client.MixinKeyBindingAccessor) mc.options.backKey).getBoundKey().getCode();
+        boolean pressed = net.minecraft.client.util.InputUtil.isKeyPressed(mc.getWindow().getHandle(), keyCode);
+        mc.options.backKey.setPressed(pressed);
+    }
 }

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class FriendManager {
+    private static final org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger("RavenBS/FriendManager");
     public static List<String> friends = new ArrayList<>();
     private static final List<Runnable> listeners = new ArrayList<>();
 
@@ -59,7 +60,7 @@ public class FriendManager {
         try (java.io.Writer writer = new java.io.FileWriter(file)) {
             gson.toJson(friends, writer);
         } catch (java.io.IOException e) {
-            e.printStackTrace();
+            LOGGER.error("Failed to save friends to {}", file, e);
         }
     }
 
@@ -75,7 +76,7 @@ public class FriendManager {
                 notifyListeners();
             }
         } catch (java.io.IOException e) {
-            e.printStackTrace();
+            LOGGER.error("Failed to load friends from {}", file, e);
         }
     }
 

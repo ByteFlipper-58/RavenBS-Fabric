@@ -21,7 +21,10 @@
         "network.MixinClientConnection",
         "accessor.IMixinMinecraftClient",
         "accessor.AccessorEntityVelocityUpdateS2CPacket",
-        "accessor.AccessorExplosionS2CPacket"
+        "accessor.AccessorExplosionS2CPacket",
+        "accessor.AccessorPlayerPositionLookS2CPacket",
+        "accessor.AccessorClientPlayerInteractionManager",
+        "accessor.InvokerGameRenderer"
     ],
     "injectors": {
         "defaultRequire": 1

@@ -154,6 +154,40 @@ public class CategoryComponent {
     }
     
     public int scrollY = 0;
+    private Integer layoutX = null;
+    private Integer layoutY = null;
+    private Integer layoutWidth = null;
+    private Integer layoutScrollY = null;
+
+    public void setLayoutOverride(int x, int y, int width, int scrollY) {
+        this.layoutX = x;
+        this.layoutY = y;
+        this.layoutWidth = width;
+        this.layoutScrollY = scrollY;
+    }
+
+    public void clearLayoutOverride() {
+        this.layoutX = null;
+        this.layoutY = null;
+        this.layoutWidth = null;
+        this.layoutScrollY = null;
+    }
+
+    public int getCurrentX() {
+        return layoutX != null ? layoutX : x;
+    }
+
+    public int getCurrentY() {
+        return layoutY != null ? layoutY : y;
+    }
+
+    public int getCurrentWidth() {
+        return layoutWidth != null ? layoutWidth : width;
+    }
+
+    public int getCurrentScrollY() {
+        return layoutScrollY != null ? layoutScrollY : scrollY;
+    }
 
     public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
         // Scroll works if hovering the whole column

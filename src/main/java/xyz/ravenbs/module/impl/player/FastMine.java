@@ -21,15 +21,7 @@ public class FastMine extends Module {
 
     @Override
     public void onUpdate() {
-        if (mc.player == null || mc.interactionManager == null) return;
-        if (creativeDisable.isToggled() && mc.player.isCreative()) return;
-        
-        // In Fabric 1.20, we need to use an accessor to modify blockBreakingCooldown
-        // For now, this is a placeholder - needs MixinClientPlayerInteractionManager
-        // The accessor would set: interactionManager.blockBreakingCooldown = (int) delay.getInput();
-        
-        // Break speed multiplier would require modifying curBlockDamageMP equivalent
-        // This requires additional mixins to ClientPlayerInteractionManager
+        // Logic is applied in MixinClientPlayerInteractionManager.
     }
     
     public double getMultiplier() {
@@ -38,5 +30,13 @@ public class FastMine extends Module {
     
     public int getDelay() {
         return (int) delay.getInput();
+    }
+
+    public boolean isActiveNow() {
+        if (!isEnabled() || mc.player == null || mc.interactionManager == null) {
+            return false;
+        }
+
+        return !creativeDisable.isToggled() || !mc.player.isCreative();
     }
 }

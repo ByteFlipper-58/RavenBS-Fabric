@@ -4,10 +4,14 @@ import xyz.ravenbs.module.Module;
 import xyz.ravenbs.module.ModuleCategory;
 import xyz.ravenbs.module.setting.impl.DescriptionSetting;
 import xyz.ravenbs.module.setting.impl.SliderSetting;
+import net.minecraft.util.Identifier;
+
+import java.util.Locale;
 
 public class Shaders extends Module {
     private SliderSetting shader;
     private String[] shaderNames = {"Blur", "Bits", "Antialias", "Creeper", "Desaturate", "Flip", "Invert", "Notch", "NTSC", "Outline", "Phosphor", "Sobel", "Spider", "Wobble"};
+    private int appliedShaderIndex = -1;
 
     public Shaders() {
         super("Shaders", ModuleCategory.render);
@@ -27,7 +31,10 @@ public class Shaders extends Module {
 
     @Override
     public void onUpdate() {
-        // Shader is applied via mixin or entity renderer
+        int selected = getShaderIndex();
+        if (selected != appliedShaderIndex) {
+            applyShader();
+        }
     }
 
     @Override
@@ -35,12 +42,26 @@ public class Shaders extends Module {
         if (mc.gameRenderer != null) {
             mc.gameRenderer.disablePostProcessor();
         }
+        appliedShaderIndex = -1;
     }
     
     private void applyShader() {
-        // In Fabric 1.20, shaders are loaded differently
-        // This would require a mixin to GameRenderer.loadPostProcessor
-        // For now, this is a placeholder
+        if (mc.gameRenderer == null) {
+            return;
+        }
+
+        mc.gameRenderer.disablePostProcessor();
+
+        try {
+            String shaderPath = shaderNames[getShaderIndex()].toLowerCase(Locale.ROOT);
+            Identifier shaderId = new Identifier("minecraft", "shaders/post/" + shaderPath + ".json");
+            ((xyz.ravenbs.mixin.accessor.InvokerGameRenderer) mc.gameRenderer).invokeLoadPostProcessor(shaderId);
+            appliedShaderIndex = getShaderIndex();
+        } catch (Exception e) {
+            xyz.ravenbs.RavenBSFabric.LOGGER.error("Failed to load shader {}", shaderNames[getShaderIndex()], e);
+            appliedShaderIndex = -1;
+            disable();
+        }
     }
     
     public int getShaderIndex() {

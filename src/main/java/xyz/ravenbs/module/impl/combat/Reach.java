@@ -9,6 +9,7 @@ public class Reach extends Module {
     public static SliderSetting min;
     public static SliderSetting max;
     public static SliderSetting weaponOnly;
+    private static double cachedReach = 3.0;
 
     public Reach() {
         super("Reach", ModuleCategory.combat);
@@ -17,10 +18,34 @@ public class Reach extends Module {
         this.registerSetting(weaponOnly = new SliderSetting("Weapon only", 0, 0, 1, 1)); // Boolean as slider for now or we can use Button
     }
 
+    @Override
+    public void onEnable() {
+        rollReach();
+    }
+
+    @Override
+    public void onUpdate() {
+        rollReach();
+    }
+
+    @Override
+    public void onDisable() {
+        cachedReach = 3.0;
+    }
+
     public static double getReach() {
+        return cachedReach;
+    }
+
+    public boolean isWeaponOnly() {
+        return weaponOnly.getInput() >= 1.0;
+    }
+
+    private void rollReach() {
         if (min.getInput() >= max.getInput()) {
-            return min.getInput();
+            cachedReach = min.getInput();
+            return;
         }
-        return min.getInput() + Utils.random.nextDouble() * (max.getInput() - min.getInput());
+        cachedReach = min.getInput() + Utils.random.nextDouble() * (max.getInput() - min.getInput());
     }
 }

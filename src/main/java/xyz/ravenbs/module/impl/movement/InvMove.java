@@ -2,10 +2,8 @@ package xyz.ravenbs.module.impl.movement;
 
 import xyz.ravenbs.module.Module;
 import xyz.ravenbs.module.ModuleCategory;
-import net.minecraft.client.gui.screen.ChatScreen;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.util.InputUtil;
-import org.lwjgl.glfw.GLFW;
 
 public class InvMove extends Module {
     public InvMove() {
@@ -26,10 +24,30 @@ public class InvMove extends Module {
              // Requires detecting arrow keys or mouse delta
         }
     }
+
+    @Override
+    public void onDisable() {
+        if (mc.options == null || mc.getWindow() == null) {
+            return;
+        }
+
+        syncKey(mc.options.forwardKey);
+        syncKey(mc.options.backKey);
+        syncKey(mc.options.leftKey);
+        syncKey(mc.options.rightKey);
+        syncKey(mc.options.jumpKey);
+        syncKey(mc.options.sprintKey);
+    }
     
     private void handleKey(net.minecraft.client.option.KeyBinding key) {
-        // Manually set pressed state if the physical key is down
-        boolean pressed = InputUtil.isKeyPressed(mc.getWindow().getHandle(), ((xyz.ravenbs.mixin.client.MixinKeyBindingAccessor)key).getBoundKey().getCode());
+        syncKey(key);
+    }
+
+    private void syncKey(net.minecraft.client.option.KeyBinding key) {
+        boolean pressed = InputUtil.isKeyPressed(
+                mc.getWindow().getHandle(),
+                ((xyz.ravenbs.mixin.client.MixinKeyBindingAccessor) key).getBoundKey().getCode()
+        );
         key.setPressed(pressed);
     }
 }

@@ -18,18 +18,17 @@ public class Sprint extends Module {
 
     @Override
     public void onUpdate() {
-        if (mc.player != null) {
-            // Force sprint key state
-            // In Fabric/Intermediary: mc.options.sprintKey.setPressed(true)
-            // But we can also direct set sprinting if we want strict behavior
-             mc.options.sprintKey.setPressed(true);
+        if (mc.player != null && mc.options != null) {
+            mc.options.sprintKey.setPressed(true);
         }
     }
     
     @Override
     public void onDisable() {
-        if (mc.options != null) {
-            mc.options.sprintKey.setPressed(false);
+        if (mc.options != null && mc.getWindow() != null) {
+            int keyCode = ((xyz.ravenbs.mixin.client.MixinKeyBindingAccessor) mc.options.sprintKey).getBoundKey().getCode();
+            boolean pressed = net.minecraft.client.util.InputUtil.isKeyPressed(mc.getWindow().getHandle(), keyCode);
+            mc.options.sprintKey.setPressed(pressed);
         }
     }
 }

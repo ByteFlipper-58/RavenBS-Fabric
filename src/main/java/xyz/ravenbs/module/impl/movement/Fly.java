@@ -7,6 +7,9 @@ import xyz.ravenbs.utility.Utils;
 
 public class Fly extends Module {
     private SliderSetting speed;
+    private boolean oldFlying;
+    private boolean oldAllowFlying;
+    private float oldFlySpeed;
     
     public Fly() {
         super("Fly", ModuleCategory.movement);
@@ -15,37 +18,47 @@ public class Fly extends Module {
 
     @Override
     public void onEnable() {
-        // Option 1: Creative Fly (if supported/bypass)
-        // mc.player.getAbilities().flying = true; 
-        // mc.player.getAbilities().allowFlying = true;
+        if (mc.player == null) {
+            return;
+        }
+
+        oldFlying = mc.player.getAbilities().flying;
+        oldAllowFlying = mc.player.getAbilities().allowFlying;
+        oldFlySpeed = mc.player.getAbilities().getFlySpeed();
     }
 
     @Override
     public void onDisable() {
         if (mc.player == null) return;
-        mc.player.getAbilities().flying = false;
-        mc.player.getAbilities().allowFlying = false;
+        mc.player.getAbilities().flying = oldFlying;
+        mc.player.getAbilities().allowFlying = oldAllowFlying;
+        mc.player.getAbilities().setFlySpeed(oldFlySpeed);
+        mc.player.setVelocity(0, mc.player.getVelocity().y, 0);
     }
 
     @Override
     public void onUpdate() {
+        if (mc.player == null || mc.options == null) {
+            return;
+        }
+
         if (!Utils.isMoving()) {
             mc.player.setVelocity(0, 0, 0);
         } else {
-            // Simple velocity fly
-             mc.player.getAbilities().flying = false; // Disable creative fly to manage velocity manually if needed
+            mc.player.getAbilities().flying = false;
+            mc.player.getAbilities().allowFlying = oldAllowFlying;
+            mc.player.getAbilities().setFlySpeed(oldFlySpeed);
              
-             // Check jump/sneak for vertical
-             double y = 0;
-             if (mc.options.jumpKey.isPressed()) {
-                 y = speed.getInput();
-             } else if (mc.options.sneakKey.isPressed()) {
-                 y = -speed.getInput();
-             }
+            double y = 0;
+            if (mc.options.jumpKey.isPressed()) {
+                y = speed.getInput();
+            } else if (mc.options.sneakKey.isPressed()) {
+                y = -speed.getInput();
+            }
              
-             Utils.setSpeed(speed.getInput());
-             mc.player.setVelocity(mc.player.getVelocity().x, y, mc.player.getVelocity().z);
-             mc.player.fallDistance = 0;
+            Utils.setSpeed(speed.getInput());
+            mc.player.setVelocity(mc.player.getVelocity().x, y, mc.player.getVelocity().z);
+            mc.player.fallDistance = 0;
         }
     }
 }

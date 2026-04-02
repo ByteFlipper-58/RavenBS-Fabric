@@ -55,9 +55,18 @@ public class RavenBSFabricClient implements ClientModInitializer {
         }
         
         net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
-             xyz.ravenbs.utility.UpdateChecker.onJoin();
+            String currentProfile = xyz.ravenbs.config.ConfigManager.getCurrentProfileName();
+            if (currentProfile != null && !currentProfile.isEmpty()) {
+                xyz.ravenbs.config.ConfigManager.loadConfig(currentProfile);
+                xyz.ravenbs.utility.NotificationManager.show("Config", "Profile '" + currentProfile + "' loaded.", xyz.ravenbs.utility.Notification.Type.INFO);
+            } else if (xyz.ravenbs.config.ConfigManager.isLoaded()) {
+                xyz.ravenbs.config.ConfigManager.loadConfig();
+                xyz.ravenbs.utility.NotificationManager.show("Config", "Default profile loaded.", xyz.ravenbs.utility.Notification.Type.INFO);
+            }
+
+            xyz.ravenbs.utility.UpdateChecker.onJoin();
         });
 
-        System.out.println("RavenBS-Fabric initialized!");
+        xyz.ravenbs.RavenBSFabric.LOGGER.info("RavenBS-Fabric initialized");
     }
 }

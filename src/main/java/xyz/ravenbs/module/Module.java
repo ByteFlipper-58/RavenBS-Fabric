@@ -58,21 +58,32 @@ public abstract class Module {
     }
     
     public void setEnabled(boolean enabled) {
+        setEnabled(enabled, false);
+    }
+
+    public void setEnabled(boolean enabled, boolean notify) {
+        if (this.enabled == enabled) {
+            return;
+        }
+
         this.enabled = enabled;
         if (enabled) {
             onEnable();
         } else {
             onDisable();
         }
+
+        if (notify) {
+            if (enabled) {
+                xyz.ravenbs.utility.NotificationManager.show("Module", getName() + " Enabled", xyz.ravenbs.utility.Notification.Type.INFO);
+            } else {
+                xyz.ravenbs.utility.NotificationManager.show("Module", getName() + " Disabled", xyz.ravenbs.utility.Notification.Type.INFO);
+            }
+        }
     }
     
     public void toggle() {
-        setEnabled(!enabled);
-        if (enabled) {
-            xyz.ravenbs.utility.NotificationManager.show("Module", getName() + " Enabled", xyz.ravenbs.utility.Notification.Type.INFO);
-        } else {
-            xyz.ravenbs.utility.NotificationManager.show("Module", getName() + " Disabled", xyz.ravenbs.utility.Notification.Type.INFO);
-        }
+        setEnabled(!enabled, true);
     }
     
     public void onEnable() {

@@ -55,9 +55,17 @@ public class Utils {
     }
     
     public static boolean inFov(float fov, net.minecraft.entity.Entity entity) {
-        // Simple FOV check
-        // RotationUtils.getRotations implementation gives needed data
-        return true; 
+        if (mc.player == null || entity == null) {
+            return false;
+        }
+
+        float[] rotations = RotationUtils.getRotations(entity);
+        if (rotations == null) {
+            return false;
+        }
+
+        float yawDiff = net.minecraft.util.math.MathHelper.wrapDegrees(rotations[0] - mc.player.getYaw());
+        return Math.abs(yawDiff) <= (fov / 2.0f);
     }
     
     public static boolean canPlayerBeSeen(net.minecraft.entity.Entity entity) {

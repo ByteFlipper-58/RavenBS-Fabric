@@ -24,9 +24,9 @@ public class SliderComponent extends Component {
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        int x = parent.getParent().x;
-        int y = parent.getParent().y + parent.getParent().height + parent.getOffset() + this.offset;
-        int width = parent.getParent().width;
+        int x = parent.getParent().getCurrentX();
+        int y = parent.getParent().getCurrentY() + parent.getParent().height + parent.getOffset() + this.offset - parent.getParent().getCurrentScrollY();
+        int width = parent.getParent().getCurrentWidth();
         int height = 16;
         
         isHovered = isHovering(mouseX, mouseY, x, y, width, height);
@@ -86,9 +86,9 @@ public class SliderComponent extends Component {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        int x = parent.getParent().x;
-        int y = parent.getParent().y + parent.getParent().height + parent.getOffset() + this.offset;
-        int width = parent.getParent().width;
+        int x = parent.getParent().getCurrentX();
+        int y = parent.getParent().getCurrentY() + parent.getParent().height + parent.getOffset() + this.offset - parent.getParent().getCurrentScrollY();
+        int width = parent.getParent().getCurrentWidth();
         int height = 16;
         
         if (isHovering(mouseX, mouseY, x, y, width, height) && button == 0) {

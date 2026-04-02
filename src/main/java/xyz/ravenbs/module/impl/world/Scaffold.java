@@ -96,6 +96,14 @@ public class Scaffold extends Module {
     public boolean getSafeWalk() {
         return safeWalk.isToggled();
     }
+
+    @Override
+    public void onDisable() {
+        blockData = null;
+        if (mc.options != null) {
+            mc.options.sneakKey.setPressed(false);
+        }
+    }
     
     @Override
     public void onPostMotion(xyz.ravenbs.event.PostMotionEvent e) {

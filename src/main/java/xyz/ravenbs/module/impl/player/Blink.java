@@ -11,6 +11,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class Blink extends Module {
     private final Queue<Packet<?>> packets = new ConcurrentLinkedQueue<>();
+    private boolean flushing;
     
     public Blink() {
         super("Blink", ModuleCategory.player);
@@ -18,26 +19,36 @@ public class Blink extends Module {
     
     @Override
     public void onEnable() {
+        flushing = false;
         packets.clear();
     }
 
     @Override
     public void onDisable() {
-        if (mc.getNetworkHandler() != null) {
+        if (mc.getNetworkHandler() == null) {
+            packets.clear();
+            return;
+        }
+
+        flushing = true;
+        try {
             while (!packets.isEmpty()) {
-                // Need a way to send without triggering event loop if using hook.
-                // Assuming FakeLag issue, we might need direct access.
-                // For now, re-sending might re-trigger.
-                // We should add a 'ignore' flag to the event or threadlocal.
-                // Or just:
-                Packet<?> p = packets.poll();
-                mc.getNetworkHandler().getConnection().send(p, null); 
+                Packet<?> packet = packets.poll();
+                if (packet != null) {
+                    mc.getNetworkHandler().getConnection().send(packet, null);
+                }
             }
+        } finally {
+            flushing = false;
         }
     }
 
     @Override
     public void onSendPacket(SendPacketEvent e) {
+        if (flushing) {
+            return;
+        }
+
         if (e.getPacket() instanceof PlayerMoveC2SPacket) {
             e.setCancelled(true);
             packets.add(e.getPacket());

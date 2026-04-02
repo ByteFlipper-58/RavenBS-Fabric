@@ -22,13 +22,13 @@ public class ModeComponent extends Component {
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         CategoryComponent category = parent.getParent();
-        int x = category.x;
-        int y = category.y + category.height + parent.getOffset() + this.offset - category.scrollY;
-        int width = category.width;
+        int x = category.getCurrentX();
+        int y = category.getCurrentY() + category.height + parent.getOffset() + this.offset - category.getCurrentScrollY();
+        int width = category.getCurrentWidth();
         int height = 16;
         
         // Skip rendering if out of bounds (optimization)
-        if (y < category.y + category.height) return;
+        if (y < category.getCurrentY() + category.height) return;
         if (y > MinecraftClient.getInstance().currentScreen.height) return;
         
         isHovered = isHovering(mouseX, mouseY, x, y, width, height);
@@ -64,13 +64,13 @@ public class ModeComponent extends Component {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         CategoryComponent category = parent.getParent();
-        int x = category.x;
-        int y = category.y + category.height + parent.getOffset() + this.offset - category.scrollY;
-        int width = category.width;
+        int x = category.getCurrentX();
+        int y = category.getCurrentY() + category.height + parent.getOffset() + this.offset - category.getCurrentScrollY();
+        int width = category.getCurrentWidth();
         int height = 16;
         
         // Ensure we don't click if scrolled out of view (behind header)
-        if (y < category.y + category.height) return false;
+        if (y < category.getCurrentY() + category.height) return false;
 
         boolean hovered = isHovering(mouseX, mouseY, x, y, width, height);
         

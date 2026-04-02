@@ -21,27 +21,9 @@ public class ButtonComponent extends Component {
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        int parentX = parent.getParent().x;
-        int parentY = parent.getParent().y + parent.getParent().height + parent.getOffset(); 
-        // We need exact Y position from parent ModuleComponent.
-        // ModuleComponent tracks its own Y relative to Category.
-        // But sub-components are rendered *inside* ModuleComponent loop or Category loop.
-        // Better design: ModuleComponent passes its exact calculated currentY to these sub-components.
-        // But ModuleComponent is passing 'this' (ModuleComponent).
-        // Let's assume parent.getCurrentY() or similar exists, or calculate dynamically.
-        
-        // Wait, ModuleComponent doesn't store its render Y. Category does the iteration.
-        // So we need to store the Y calculated during render? Or pass it in render()?
-        // Re-design: render() here should take x, y arguments? Component signature is fixed.
-        // WE CANNOT change Component signature easily without breaking inheritance.
-        // BUT we can use the 'offset' logic relative to the ModuleComponent's "base" Y if we knew it.
-        
-        // Let's look at ModuleComponent. It calculates `y = parent.y + parent.height + offset`.
-        // So `ButtonComponent` Y should be `parent.y + parent.height + parent.offset + this.offset`.
-        
-        int x = parent.getParent().x;
-        int y = parent.getParent().y + parent.getParent().height + parent.getOffset() + this.offset;
-        int width = parent.getParent().width;
+        int x = parent.getParent().getCurrentX();
+        int y = parent.getParent().getCurrentY() + parent.getParent().height + parent.getOffset() + this.offset - parent.getParent().getCurrentScrollY();
+        int width = parent.getParent().getCurrentWidth();
         int height = 16;
 
         // Save Y for clicks
@@ -80,9 +62,9 @@ public class ButtonComponent extends Component {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        int x = parent.getParent().x;
-        int y = parent.getParent().y + parent.getParent().height + parent.getOffset() + this.offset;
-        int width = parent.getParent().width;
+        int x = parent.getParent().getCurrentX();
+        int y = parent.getParent().getCurrentY() + parent.getParent().height + parent.getOffset() + this.offset - parent.getParent().getCurrentScrollY();
+        int width = parent.getParent().getCurrentWidth();
         int height = 16;
 
         if (isHovering(mouseX, mouseY, x, y, width, height) && button == 0) {

@@ -70,14 +70,14 @@ public class ModuleComponent extends Component {
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        int x = parent.x;
-        int y = parent.y + parent.height + offset - parent.scrollY; // apply scroll
+        int x = parent.getCurrentX();
+        int y = parent.getCurrentY() + parent.height + offset - parent.getCurrentScrollY();
         
         // Visibility Check
         // Visibility Check
-        if (y < parent.y + parent.height) return; // Don't render above header
+        if (y < parent.getCurrentY() + parent.height) return; // Don't render above header
         if (y > MinecraftClient.getInstance().currentScreen.height) return; // Don't render below screen
-        int width = parent.width;
+        int width = parent.getCurrentWidth();
         int height = 14; // Compact height
         
         // Background
@@ -141,17 +141,17 @@ public class ModuleComponent extends Component {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        int x = parent.x;
-        int y = parent.y + parent.height + offset - parent.scrollY; // apply scroll
+        int x = parent.getCurrentX();
+        int y = parent.getCurrentY() + parent.height + offset - parent.getCurrentScrollY();
         
         // Logic fix: Don't return false early if header is hidden, because settings might still be visible below!
         // if (y < parent.y + parent.height) return false; 
         
-        int width = parent.width;
+        int width = parent.getCurrentWidth();
         int height = 14;
         
         // Only allow toggling the module if the header itself is actually visible
-        if (y >= parent.y + parent.height) {
+        if (y >= parent.getCurrentY() + parent.height) {
             if (isHovering(mouseX, mouseY, x, y, width, height)) {
                 if (button == 0) {
                     mod.toggle();

@@ -36,6 +36,7 @@ public class KillAura extends Module {
         this.registerSetting(rotationMode = new SliderSetting("Rotation mode", 0, rotationModes));
         this.registerSetting(targetInvis = new ButtonSetting("Target invis", true));
         this.registerSetting(ignoreTeammates = new ButtonSetting("Ignore teammates", true));
+        this.registerSetting(weaponOnly = new ButtonSetting("Weapon only", false));
     }
 
     @Override
@@ -45,6 +46,11 @@ public class KillAura extends Module {
 
     @Override
     public void onPreMotion(PreMotionEvent e) {
+        if (weaponOnly.isToggled() && !Utils.isHoldingWeapon()) {
+            target = null;
+            return;
+        }
+
         setTarget();
         
         if (target != null) {
@@ -99,6 +105,10 @@ public class KillAura extends Module {
     }
 
     private boolean shouldAttack() {
+        if (weaponOnly.isToggled() && !Utils.isHoldingWeapon()) {
+            return false;
+        }
+
         if (aps.getInput() == 1.0) {
             return mc.player.getAttackCooldownProgress(0.5f) >= 1.0f;
         } else {
@@ -112,6 +122,10 @@ public class KillAura extends Module {
     private void attack(LivingEntity entity) {
         mc.interactionManager.attackEntity(mc.player, entity);
         mc.player.swingHand(Hand.MAIN_HAND);
+        STap sTap = (STap) xyz.ravenbs.module.ModuleManager.getModule(STap.class);
+        if (sTap != null && sTap.isEnabled()) {
+            sTap.onAttack(entity);
+        }
         lastAttackTime = System.currentTimeMillis();
     }
 }

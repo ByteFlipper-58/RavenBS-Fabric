@@ -36,13 +36,13 @@ public class ColorComponent extends Component {
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        int x = parent.getParent().x;
-        int y = parent.getParent().y + parent.getParent().height + parent.getOffset() + this.offset;
+        int x = parent.getParent().getCurrentX();
+        int y = parent.getParent().getCurrentY() + parent.getParent().height + parent.getOffset() + this.offset - parent.getParent().getCurrentScrollY();
         
         // Visibility Check
-        if (y < parent.getParent().y + parent.getParent().height) return;
+        if (y < parent.getParent().getCurrentY() + parent.getParent().height) return;
 
-        int width = parent.getParent().width;
+        int width = parent.getParent().getCurrentWidth();
         int height = 16;
         
         isHovered = isHovering(mouseX, mouseY, x, y, width, height);
@@ -67,15 +67,6 @@ public class ColorComponent extends Component {
 
         // Render SubComponents if expanded
         if (isExpanded) {
-            // Need to update their Y positions?
-            // Since we passed 'offset' in constructor, but 'parent.getOffset()' might change?
-            // No, parent.getOffset() is correct.
-            // But we passed 'offset + subOffset' as THE offset for the child.
-            // Wait, SliderComponent constructor takes 'offset'.
-            // render() uses: y = parent.getParent().y + ... + parent.getOffset() + this.offset
-            // This logic allows them to track the module's position.
-            // So we don't need to manually update position here, just call render.
-            
             for (Component c : subComponents) {
                 c.render(context, mouseX, mouseY, delta);
             }
@@ -84,9 +75,9 @@ public class ColorComponent extends Component {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        int x = parent.getParent().x;
-        int y = parent.getParent().y + parent.getParent().height + parent.getOffset() + this.offset;
-        int width = parent.getParent().width;
+        int x = parent.getParent().getCurrentX();
+        int y = parent.getParent().getCurrentY() + parent.getParent().height + parent.getOffset() + this.offset - parent.getParent().getCurrentScrollY();
+        int width = parent.getParent().getCurrentWidth();
         int height = 16;
         
         if (isHovering(mouseX, mouseY, x, y, width, height)) {

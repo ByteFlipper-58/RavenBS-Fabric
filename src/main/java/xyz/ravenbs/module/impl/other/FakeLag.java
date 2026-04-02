@@ -12,6 +12,7 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class FakeLag extends Module {
+    private static final org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger("RavenBS/FakeLag");
     private SliderSetting delay;
     public static final Queue<Packet<?>> packetQueue = new ConcurrentLinkedQueue<>();
     private long lastSend;
@@ -64,7 +65,7 @@ public class FakeLag extends Module {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.error("Failed to flush fake lag queue", e);
         }
         ignoring = false;
     }

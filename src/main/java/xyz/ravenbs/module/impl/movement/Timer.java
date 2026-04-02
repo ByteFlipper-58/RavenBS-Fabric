@@ -14,8 +14,8 @@ public class Timer extends Module {
     
     @Override
     public void onDisable() {
-        // Reset check is usually done in Mixin
+        // No explicit cleanup is required; RenderTickCounter reads live module state.
     }
     
-    // Logic is handled in MixinRenderTickCounter usually, or MixinMinecraftClient
+    // Logic is handled in MixinRenderTickCounter.
 }

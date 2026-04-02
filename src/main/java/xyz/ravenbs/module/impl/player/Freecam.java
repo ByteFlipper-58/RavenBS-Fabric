@@ -16,6 +16,8 @@ public class Freecam extends Module {
     private OtherClientPlayerEntity dummy;
     private double oldX, oldY, oldZ;
     private float oldYaw, oldPitch;
+    private boolean oldFlying;
+    private float oldFlySpeed;
 
     public Freecam() {
         super("Freecam", ModuleCategory.player);
@@ -25,7 +27,7 @@ public class Freecam extends Module {
 
     @Override
     public void onEnable() {
-        if (mc.player == null) return;
+        if (mc.player == null || mc.world == null) return;
         
         // Save position
         oldX = mc.player.getX();
@@ -33,6 +35,8 @@ public class Freecam extends Module {
         oldZ = mc.player.getZ();
         oldYaw = mc.player.getYaw();
         oldPitch = mc.player.getPitch();
+        oldFlying = mc.player.getAbilities().flying;
+        oldFlySpeed = mc.player.getAbilities().getFlySpeed();
 
         // Create dummy
         dummy = new OtherClientPlayerEntity(mc.world, mc.player.getGameProfile());
@@ -54,19 +58,19 @@ public class Freecam extends Module {
 
     @Override
     public void onDisable() {
-        if (mc.player == null || dummy == null) return;
-        
-        // Teleport back to dummy
-        mc.player.setPosition(dummy.getX(), dummy.getY(), dummy.getZ());
-        mc.player.setYaw(dummy.getYaw());
-        mc.player.setPitch(dummy.getPitch());
-        
-        // Remove dummy
-        mc.world.removeEntity(dummy.getId(), Entity.RemovalReason.DISCARDED);
-        dummy = null;
-        
-        // Reset player state if we modified it
-        mc.player.setVelocity(0,0,0);
+        if (mc.player != null) {
+            mc.player.setPosition(oldX, oldY, oldZ);
+            mc.player.setYaw(oldYaw);
+            mc.player.setPitch(oldPitch);
+            mc.player.setVelocity(0, 0, 0);
+            mc.player.getAbilities().flying = oldFlying;
+            mc.player.getAbilities().setFlySpeed(oldFlySpeed);
+        }
+
+        if (dummy != null && mc.world != null) {
+            mc.world.removeEntity(dummy.getId(), Entity.RemovalReason.DISCARDED);
+            dummy = null;
+        }
     }
     
     @Override

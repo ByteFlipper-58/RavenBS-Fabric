@@ -1,6 +1,7 @@
 package xyz.ravenbs.mixin.client;
 
 import xyz.ravenbs.module.ModuleManager;
+import xyz.ravenbs.module.impl.combat.Reach;
 import xyz.ravenbs.module.impl.player.FastMine;
 import xyz.ravenbs.module.impl.player.DelayRemover;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
@@ -26,7 +27,7 @@ public class MixinClientPlayerInteractionManager {
         
         // FastMine (additional speed multiplier)
         FastMine fastMine = (FastMine) ModuleManager.getModule(FastMine.class);
-        if (fastMine != null && fastMine.isEnabled()) {
+        if (fastMine != null && fastMine.isActiveNow()) {
             // Apply multiplier
             this.currentBreakingProgress += (float) ((fastMine.getMultiplier() - 1.0) * 0.1);
             
@@ -42,6 +43,20 @@ public class MixinClientPlayerInteractionManager {
             DelayRemover.hitDelay != null && DelayRemover.hitDelay.isToggled()) {
             this.blockBreakingCooldown = 0;
         }
+    }
+
+    @Inject(method = "getReachDistance", at = @At("RETURN"), cancellable = true)
+    private void onGetReachDistance(CallbackInfoReturnable<Float> cir) {
+        Reach reach = (Reach) ModuleManager.getModule(Reach.class);
+        if (reach == null || !reach.isEnabled()) {
+            return;
+        }
+
+        if (reach.isWeaponOnly() && !xyz.ravenbs.utility.Utils.isHoldingWeapon()) {
+            return;
+        }
+
+        cir.setReturnValue((float) Reach.getReach());
     }
 }
 
