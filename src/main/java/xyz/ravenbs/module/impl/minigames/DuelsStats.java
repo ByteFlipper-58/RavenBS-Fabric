@@ -28,6 +28,7 @@ import xyz.ravenbs.module.setting.impl.ModeSetting;
 import xyz.ravenbs.module.setting.impl.SliderSetting;
 import xyz.ravenbs.utility.Notification;
 import xyz.ravenbs.utility.NotificationManager;
+import xyz.ravenbs.utility.ServerContext;
 import xyz.ravenbs.utility.Utils;
 
 import java.awt.Color;
@@ -445,26 +446,7 @@ public class DuelsStats extends Module {
     }
 
     private boolean isLikelyDuel() {
-        if (mc.world == null) {
-            return false;
-        }
-
-        Scoreboard scoreboard = mc.world.getScoreboard();
-        ScoreboardObjective objective = scoreboard.getObjectiveForSlot(1);
-        if (objective == null) {
-            return false;
-        }
-
-        String title = objective.getDisplayName().getString().toLowerCase(Locale.ROOT);
-        String name = objective.getName().toLowerCase(Locale.ROOT);
-        return title.contains("duel")
-                || name.contains("duel")
-                || title.contains("boxing")
-                || title.contains("sumo")
-                || title.contains("bridge")
-                || title.contains("uhc")
-                || title.contains("nodebuff")
-                || title.contains("combo");
+        return ServerContext.is(ServerContext.GameMode.DUELS);
     }
 
     private float getHealthPct(PlayerEntity player) {

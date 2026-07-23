@@ -12,6 +12,10 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public class Blink extends Module {
     private final Queue<Packet<?>> packets = new ConcurrentLinkedQueue<>();
     private boolean flushing;
+
+    public int getBufferedPacketCount() {
+        return packets.size();
+    }
     
     public Blink() {
         super("Blink", ModuleCategory.player);

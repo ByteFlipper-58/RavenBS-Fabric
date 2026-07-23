@@ -23,6 +23,7 @@ public class RavenBSFabricClient implements ClientModInitializer {
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (client.player != null && client.world != null) {
+                xyz.ravenbs.utility.ServerContext.update(client);
                 ModuleManager.onUpdate();
             }
         });
@@ -55,13 +56,16 @@ public class RavenBSFabricClient implements ClientModInitializer {
         }
         
         net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
+            xyz.ravenbs.utility.ServerContext.update(client);
             ModuleManager.onWorldJoin();
             xyz.ravenbs.utility.FriendManager.refreshOnlineIdentities();
             xyz.ravenbs.utility.UpdateChecker.onJoin();
         });
 
-        net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.DISCONNECT.register((handler, client) ->
-                ModuleManager.onWorldLeave());
+        net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
+            ModuleManager.onWorldLeave();
+            xyz.ravenbs.utility.ServerContext.reset();
+        });
 
         xyz.ravenbs.RavenBSFabric.LOGGER.info("RavenBS-Fabric initialized");
     }

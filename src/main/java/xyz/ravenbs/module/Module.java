@@ -61,6 +61,15 @@ public abstract class Module {
     public ModuleCategory getCategory() {
         return category;
     }
+
+    public ModuleEventPriority getEventPriority() {
+        return ModuleEventPriority.NORMAL;
+    }
+
+    /** Packet callbacks are skipped after cancellation unless a module explicitly opts in. */
+    public boolean receivesCancelledPackets() {
+        return false;
+    }
     
     public boolean isEnabled() {
         return enabled;

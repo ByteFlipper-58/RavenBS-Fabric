@@ -25,6 +25,7 @@ public class CommandManager {
                 Utils.sendMessage(tr("raven.command.help.friend"));
                 Utils.sendMessage(tr("raven.command.help.config"));
                 Utils.sendMessage(tr("raven.command.help.update"));
+                Utils.sendMessage(tr("raven.command.help.debug"));
                 return true;
                 
             case "bind":
@@ -53,6 +54,10 @@ public class CommandManager {
                     return true;
                 }
                 handleFriendCommand(args);
+                return true;
+
+            case "debug":
+                sendDebugReport();
                 return true;
             
             case "config":
@@ -174,6 +179,7 @@ public class CommandManager {
             addIfMatch(list, current, ".config", "Manage config profiles");
             addIfMatch(list, current, ".toggle", "Toggle a module");
             addIfMatch(list, current, ".updatecheck", tr("raven.suggest.update.toggle"));
+            addIfMatch(list, current, ".debug", tr("raven.suggest.debug"));
             addIfMatch(list, current, ".update", tr("raven.suggest.update.alias"));
             // Aliases
             addIfMatch(list, current, ".t", "Alias for .toggle");
@@ -243,6 +249,30 @@ public class CommandManager {
     private static void addIfMatch(java.util.List<Suggestion> list, String input, String target, String tooltip) {
         if (target.toLowerCase().startsWith(input.toLowerCase())) {
             list.add(new Suggestion(target, tooltip));
+        }
+    }
+
+    private static void sendDebugReport() {
+        String profile = xyz.ravenbs.config.ConfigManager.getCurrentProfileName();
+        if (profile == null || profile.isEmpty()) {
+            profile = "default";
+        }
+
+        Utils.sendMessage(tr("raven.command.debug.header"));
+        Utils.sendMessage(tr("raven.command.debug.profile", profile));
+        Utils.sendMessage(tr("raven.command.debug.server", ServerContext.describe()));
+
+        xyz.ravenbs.module.impl.player.Blink blink = (xyz.ravenbs.module.impl.player.Blink) ModuleManager.getModule(xyz.ravenbs.module.impl.player.Blink.class);
+        int blinkPackets = blink == null ? 0 : blink.getBufferedPacketCount();
+        Utils.sendMessage(tr("raven.command.debug.packets", blinkPackets, xyz.ravenbs.module.impl.other.FakeLag.packetQueue.size()));
+
+        java.util.List<ModuleManager.ModuleFault> faults = ModuleManager.getModuleFaults();
+        if (faults.isEmpty()) {
+            Utils.sendMessage(tr("raven.command.debug.faults.empty"));
+            return;
+        }
+        for (ModuleManager.ModuleFault fault : faults) {
+            Utils.sendMessage(tr("raven.command.debug.fault", fault.moduleName(), fault.phase(), fault.error()));
         }
     }
 

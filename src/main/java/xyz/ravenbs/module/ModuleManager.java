@@ -51,15 +51,23 @@ public class ModuleManager {
     private static final List<Module> modules = new ArrayList<>();
     private static final Map<String, Module> modulesById = new HashMap<>();
     private static final Set<String> faultedModuleIds = new HashSet<>();
+    private static final Map<String, ModuleFault> moduleFaults = new HashMap<>();
     private static final Logger LOGGER = LoggerFactory.getLogger("ModuleManager");
     private static boolean registered;
 
     public static synchronized List<Module> getModules() {
         return List.copyOf(modules);
     }
+
+    public record ModuleFault(String moduleName, String phase, long timestamp, String error) {
+    }
+
+    public static synchronized List<ModuleFault> getModuleFaults() {
+        return List.copyOf(moduleFaults.values());
+    }
     
     public static void onPreMotion(xyz.ravenbs.event.PreMotionEvent e) {
-        for (Module m : modules) {
+        for (Module m : getDispatchOrder()) {
             if (m.isEnabled() && !isModuleFaulted(m)) {
                 try {
                     m.onPreMotion(e);
@@ -71,7 +79,7 @@ public class ModuleManager {
     }
 
     public static void onPostMotion(xyz.ravenbs.event.PostMotionEvent e) {
-        for (Module m : modules) {
+        for (Module m : getDispatchOrder()) {
             if (m.isEnabled() && !isModuleFaulted(m)) {
                 try {
                     m.onPostMotion(e);
@@ -83,7 +91,7 @@ public class ModuleManager {
     }
     
     public static void onPreUpdate() {
-        for (Module m : modules) {
+        for (Module m : getDispatchOrder()) {
             if (m.isEnabled() && !isModuleFaulted(m)) {
                 try {
                     m.onPreUpdate();
@@ -95,7 +103,7 @@ public class ModuleManager {
     }
     
     public static void onPostUpdate() {
-        for (Module m : modules) {
+        for (Module m : getDispatchOrder()) {
             if (m.isEnabled() && !isModuleFaulted(m)) {
                 try {
                     m.onPostUpdate();
@@ -107,7 +115,7 @@ public class ModuleManager {
     }
 
     public static void onUpdate() {
-        for (Module m : modules) {
+        for (Module m : getDispatchOrder()) {
             if (isModuleFaulted(m)) {
                 continue;
             }
@@ -127,8 +135,11 @@ public class ModuleManager {
     }
     
     public static void onReceivePacket(xyz.ravenbs.event.ReceivePacketEvent e) {
-        for (Module m : modules) {
+        for (Module m : getDispatchOrder()) {
             if (m.isEnabled() && !isModuleFaulted(m)) {
+                if (e.isCancelled() && !m.receivesCancelledPackets()) {
+                    continue;
+                }
                 try {
                     m.onReceivePacket(e);
                 } catch (Throwable t) {
@@ -146,8 +157,11 @@ public class ModuleManager {
                 return;
             }
         }
-        for (Module m : modules) {
+        for (Module m : getDispatchOrder()) {
             if (m.isEnabled() && !isModuleFaulted(m)) {
+                if (e.isCancelled() && !m.receivesCancelledPackets()) {
+                    continue;
+                }
                 try {
                     m.onSendPacket(e);
                 } catch (Throwable t) {
@@ -158,7 +172,7 @@ public class ModuleManager {
     }
     
     public static void onRenderWorld(net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext context) {
-        for (Module m : modules) {
+        for (Module m : getDispatchOrder()) {
             if (m.isEnabled() && !isModuleFaulted(m)) {
                 try {
                     m.onRenderWorld(context);
@@ -170,7 +184,7 @@ public class ModuleManager {
     }
 
     public static void onRender(net.minecraft.client.gui.DrawContext context, float tickDelta) {
-        for (Module m : modules) {
+        for (Module m : getDispatchOrder()) {
             if (m.isEnabled() && !isModuleFaulted(m)) {
                 try {
                     m.onRender(context, tickDelta);
@@ -183,6 +197,13 @@ public class ModuleManager {
 
     public static void sort() {
         modules.sort(Comparator.comparing(Module::getName));
+    }
+
+    private static List<Module> getDispatchOrder() {
+        List<Module> ordered = new ArrayList<>(modules);
+        // List.sort is stable, so modules with the same priority preserve registration order.
+        ordered.sort(Comparator.comparing(Module::getEventPriority));
+        return ordered;
     }
 
     public static void onWorldJoin() {
@@ -410,6 +431,12 @@ public class ModuleManager {
         }
 
         boolean firstFailure = faultedModuleIds.add(module.getId());
+        moduleFaults.put(module.getId(), new ModuleFault(
+                module.getName(),
+                phase,
+                System.currentTimeMillis(),
+                t.getClass().getSimpleName() + ": " + String.valueOf(t.getMessage())
+        ));
         if (firstFailure) {
             LOGGER.error("Module {} failed during {} and was disabled", module.getName(), phase, t);
         } else {
@@ -421,6 +448,7 @@ public class ModuleManager {
     public static void clearModuleFault(Module module) {
         if (module != null) {
             faultedModuleIds.remove(module.getId());
+            moduleFaults.remove(module.getId());
         }
     }
 
