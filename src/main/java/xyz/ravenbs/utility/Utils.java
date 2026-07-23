@@ -41,7 +41,7 @@ public class Utils {
     }
     
     public static boolean isFriended(net.minecraft.entity.player.PlayerEntity player) {
-        return xyz.ravenbs.utility.FriendManager.isFriended(player.getName().getString());
+        return xyz.ravenbs.utility.FriendManager.isFriend(player);
     }
     
     public static boolean isTeamMate(net.minecraft.entity.Entity entity) {

@@ -89,7 +89,7 @@ public class KillAura extends Module {
                 if (player.isCreative()) continue;
                 if (!targetInvis.isToggled() && player.isInvisible()) continue;
                 if (ignoreTeammates.isToggled() && Utils.isTeamMate(player)) continue;
-                if (xyz.ravenbs.utility.FriendManager.isFriended(player.getName().getString())) continue;
+                if (xyz.ravenbs.utility.FriendManager.isFriend(player)) continue;
                 if (mc.player.distanceTo(player) > attackRange.getInput()) continue;
                 
                 targets.add(player);

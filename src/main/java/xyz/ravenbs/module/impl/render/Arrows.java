@@ -54,7 +54,7 @@ public class Arrows extends Module {
             int arrowY = centerY + (int) (Math.sin(relativeAngle) * r);
             
             // Draw arrow (simple triangle)
-            int color = xyz.ravenbs.utility.FriendManager.isFriended(player.getName().getString()) 
+            int color = xyz.ravenbs.utility.FriendManager.isFriend(player)
                 ? 0xFF00FF00 : 0xFFFF0000;
             
             context.fill(arrowX - 3, arrowY - 3, arrowX + 3, arrowY + 3, color);

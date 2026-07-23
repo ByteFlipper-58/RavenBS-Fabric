@@ -19,6 +19,7 @@ public class RavenBSFabricClient implements ClientModInitializer {
         ModuleManager moduleManager = new ModuleManager();
         moduleManager.register();
         ConfigManager.bootstrap();
+        xyz.ravenbs.utility.FriendManager.initialize();
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (client.player != null && client.world != null) {
@@ -40,7 +41,10 @@ public class RavenBSFabricClient implements ClientModInitializer {
             xyz.ravenbs.utility.ChamsRenderer.renderChams(context);
         });
 
-        Runtime.getRuntime().addShutdownHook(new Thread(ConfigManager::saveActiveConfig));
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            ConfigManager.saveActiveConfig();
+            xyz.ravenbs.utility.FriendManager.save();
+        }));
 
         // Update Checker
         try {
@@ -50,8 +54,10 @@ public class RavenBSFabricClient implements ClientModInitializer {
             xyz.ravenbs.RavenBSFabric.LOGGER.error("Failed to start Update Checker", e);
         }
         
-        net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.JOIN.register((handler, sender, client) ->
-                xyz.ravenbs.utility.UpdateChecker.onJoin());
+        net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
+            xyz.ravenbs.utility.FriendManager.refreshOnlineIdentities();
+            xyz.ravenbs.utility.UpdateChecker.onJoin();
+        });
 
         xyz.ravenbs.RavenBSFabric.LOGGER.info("RavenBS-Fabric initialized");
     }

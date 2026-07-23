@@ -53,7 +53,7 @@ public class TPAura extends Module {
             if (player == mc.player) continue;
             if (player.isDead()) continue;
             if (player.isSpectator()) continue;
-            if (xyz.ravenbs.utility.FriendManager.isFriended(player.getName().getString())) continue;
+            if (xyz.ravenbs.utility.FriendManager.isFriend(player)) continue;
             if (ignoreTeammates.isToggled() && Utils.isTeamMate(player)) continue;
             
             double dist = mc.player.squaredDistanceTo(player);

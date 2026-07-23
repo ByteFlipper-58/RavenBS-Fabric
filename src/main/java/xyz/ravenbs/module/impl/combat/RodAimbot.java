@@ -80,7 +80,7 @@ public class RodAimbot extends Module {
             if (player == mc.player) continue;
             if (player.isDead()) continue;
             if (!aimInvis.isToggled() && player.isInvisible()) continue;
-            if (xyz.ravenbs.utility.FriendManager.isFriended(player.getName().getString())) continue;
+            if (xyz.ravenbs.utility.FriendManager.isFriend(player)) continue;
             if (ignoreTeammates.isToggled() && Utils.isTeamMate(player)) continue;
             if (xyz.ravenbs.module.impl.world.AntiBot.isBot(player)) continue;
             

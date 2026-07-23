@@ -13,7 +13,7 @@ public class CommandManager {
     public static boolean onChat(String message) {
         if (!message.startsWith(".")) return false;
         
-        String[] args = message.substring(1).split(" ");
+        String[] args = message.substring(1).trim().split("\\s+");
         if (args.length == 0) return false;
         
         String cmd = args[0].toLowerCase();
@@ -52,27 +52,7 @@ public class CommandManager {
                     Utils.sendMessage(tr("raven.command.friend.usage.full"));
                     return true;
                 }
-                if (args[1].equalsIgnoreCase("list")) {
-                    if (FriendManager.friends.isEmpty()) {
-                        Utils.sendMessage(tr("raven.command.friend.list.empty"));
-                    } else {
-                        Utils.sendMessage(tr("raven.command.friend.list", String.join(", ", FriendManager.friends)));
-                    }
-                    return true;
-                }
-                if (args[1].equalsIgnoreCase("clear")) {
-                    FriendManager.clear();
-                    return true;
-                }
-                if (args.length < 3) {
-                    Utils.sendMessage(tr("raven.command.friend.usage.short"));
-                    return true;
-                }
-                if (args[1].equalsIgnoreCase("add")) {
-                    FriendManager.addFriend(args[2]);
-                } else if (args[1].equalsIgnoreCase("remove")) {
-                    FriendManager.removeFriend(args[2]);
-                }
+                handleFriendCommand(args);
                 return true;
             
             case "config":
@@ -190,7 +170,7 @@ public class CommandManager {
             
             addIfMatch(list, current, ".help", "Show help");
             addIfMatch(list, current, ".bind", "Bind a module to a key");
-            addIfMatch(list, current, ".friend", "Manage friends (add/remove)");
+            addIfMatch(list, current, ".friend", "Manage friends");
             addIfMatch(list, current, ".config", "Manage config profiles");
             addIfMatch(list, current, ".toggle", "Toggle a module");
             addIfMatch(list, current, ".updatecheck", tr("raven.suggest.update.toggle"));
@@ -219,8 +199,11 @@ public class CommandManager {
             } else if (cmd.equals(".friend") || cmd.equals(".f")) {
                 addIfMatch(list, arg, "add", "Add a friend");
                 addIfMatch(list, arg, "remove", "Remove a friend");
+                addIfMatch(list, arg, "toggle", "Add or remove a friend");
+                addIfMatch(list, arg, "alias", "Set a friend alias");
                 addIfMatch(list, arg, "clear", "Clear all friends");
                 addIfMatch(list, arg, "list", tr("raven.suggest.friend.list"));
+                addIfMatch(list, arg, "online", tr("raven.suggest.friend.online"));
             } else if (cmd.equals(".config") || cmd.equals(".c")) {
                 addIfMatch(list, arg, "save", "Save current profile");
                 addIfMatch(list, arg, "load", "Load a profile");
@@ -237,8 +220,22 @@ public class CommandManager {
             return new SuggestionContext(offset, list);
         }
         
-        // Case 3: Typing second argument? (e.g. .bind Module Key)
-        // Not implemented heavily yet, but possible.
+        if (args.length == 3) {
+            String cmd = args[0].toLowerCase();
+            String action = args[1].toLowerCase();
+            if ((cmd.equals(".friend") || cmd.equals(".f"))
+                    && (action.equals("remove") || action.equals("toggle") || action.equals("alias"))) {
+                java.util.List<Suggestion> list = new java.util.ArrayList<>();
+                String query = args[2].toLowerCase();
+                for (FriendManager.Friend friend : FriendManager.getFriends()) {
+                    if (friend.getName().toLowerCase().startsWith(query)) {
+                        list.add(new Suggestion(friend.getName(), friend.getDisplayName()));
+                    }
+                }
+                list.sort((first, second) -> first.text.compareToIgnoreCase(second.text));
+                return new SuggestionContext(input.lastIndexOf(" ") + 1, list);
+            }
+        }
         
         return new SuggestionContext(0, new java.util.ArrayList<>());
     }
@@ -246,6 +243,103 @@ public class CommandManager {
     private static void addIfMatch(java.util.List<Suggestion> list, String input, String target, String tooltip) {
         if (target.toLowerCase().startsWith(input.toLowerCase())) {
             list.add(new Suggestion(target, tooltip));
+        }
+    }
+
+    private static void handleFriendCommand(String[] args) {
+        String action = args[1].toLowerCase();
+        if (action.equals("list")) {
+            java.util.List<FriendManager.Friend> friends = FriendManager.getFriends();
+            if (friends.isEmpty()) {
+                Utils.sendMessage(tr("raven.command.friend.list.empty"));
+                return;
+            }
+            String names = friends.stream().map(FriendManager.Friend::getDisplayName).collect(Collectors.joining(", "));
+            Utils.sendMessage(tr("raven.command.friend.list", names));
+            Utils.sendMessage(tr("raven.command.friend.summary", FriendManager.getOnlineCount(), friends.size()));
+            return;
+        }
+        if (action.equals("online")) {
+            java.util.List<FriendManager.Friend> friends = FriendManager.getOnlineFriends();
+            if (friends.isEmpty()) {
+                Utils.sendMessage(tr("raven.command.friend.online.empty"));
+                return;
+            }
+            String names = friends.stream().map(FriendManager.Friend::getDisplayName).collect(Collectors.joining(", "));
+            Utils.sendMessage(tr("raven.command.friend.online", names));
+            return;
+        }
+        if (action.equals("clear")) {
+            int cleared = FriendManager.clear();
+            Utils.sendMessage(cleared == 0
+                    ? tr("raven.command.friend.list.empty")
+                    : tr("raven.command.friend.cleared", cleared));
+            return;
+        }
+        if (args.length < 3) {
+            Utils.sendMessage(tr("raven.command.friend.usage.short"));
+            return;
+        }
+
+        String name = args[2];
+        FriendManager.ChangeResult result;
+        switch (action) {
+            case "add":
+                result = FriendManager.addFriend(name, joinArguments(args, 3));
+                break;
+            case "remove":
+                result = FriendManager.removeFriend(name);
+                break;
+            case "toggle":
+                result = FriendManager.isFriended(name)
+                        ? FriendManager.removeFriend(name)
+                        : FriendManager.addFriend(name, "");
+                break;
+            case "alias":
+                if (args.length < 4) {
+                    Utils.sendMessage(tr("raven.command.friend.alias.usage"));
+                    return;
+                }
+                String alias = joinArguments(args, 3);
+                result = FriendManager.setAlias(name, alias.equalsIgnoreCase("clear") ? "" : alias);
+                break;
+            default:
+                Utils.sendMessage(tr("raven.command.friend.usage.full"));
+                return;
+        }
+        sendFriendResult(result, name);
+    }
+
+    private static String joinArguments(String[] args, int startIndex) {
+        if (args.length <= startIndex) {
+            return "";
+        }
+        return String.join(" ", java.util.Arrays.copyOfRange(args, startIndex, args.length));
+    }
+
+    private static void sendFriendResult(FriendManager.ChangeResult result, String name) {
+        switch (result) {
+            case ADDED:
+                Utils.sendMessage(tr("raven.command.friend.added", name));
+                break;
+            case UPDATED:
+                Utils.sendMessage(tr("raven.command.friend.updated", name));
+                break;
+            case REMOVED:
+                Utils.sendMessage(tr("raven.command.friend.removed", name));
+                break;
+            case ALREADY_EXISTS:
+                Utils.sendMessage(tr("raven.command.friend.exists", name));
+                break;
+            case NOT_FOUND:
+                Utils.sendMessage(tr("raven.command.friend.not_found", name));
+                break;
+            case INVALID_NAME:
+                Utils.sendMessage(tr("raven.command.friend.invalid_name"));
+                break;
+            case INVALID_ALIAS:
+                Utils.sendMessage(tr("raven.command.friend.invalid_alias"));
+                break;
         }
     }
 
