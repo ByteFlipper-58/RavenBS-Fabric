@@ -33,6 +33,10 @@ public class ModuleComponent extends Component {
 
         if (mod.getSettings() != null) {
             for (xyz.ravenbs.module.setting.Setting s : mod.getSettings()) {
+                if (!s.visible) {
+                    continue;
+                }
+
                 if (s instanceof xyz.ravenbs.module.setting.impl.ButtonSetting) {
                     settings.add(new ButtonComponent((xyz.ravenbs.module.setting.impl.ButtonSetting) s, this, setOffset));
                     setOffset += 16;
