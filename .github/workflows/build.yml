@@ -10,10 +10,7 @@ on:
 
 # Define required permissions
 permissions:
-  contents: write
-  packages: write
-  issues: write
-  pull-requests: write
+  contents: read
 
 jobs:
   build:
@@ -52,21 +49,26 @@ jobs:
       id: hash
       shell: pwsh
       run: |
-        $jar = Get-ChildItem -Path "build/libs" -Filter "*.jar" | Select-Object -First 1
+        $jar = Get-ChildItem -Path "build/libs" -Filter "*.jar" |
+          Where-Object { $_.Name -notmatch '-(sources|dev)\.jar$' } |
+          Select-Object -Single
         $hash = Get-FileHash -Path $jar.FullName -Algorithm SHA256
         echo "HASH=$($hash.Hash)" >> $env:GITHUB_ENV
         echo "JAR_NAME=$($jar.Name)" >> $env:GITHUB_ENV
+        echo "JAR_PATH=$($jar.FullName)" >> $env:GITHUB_ENV
       
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: raven-bs-plus
-        path: build/libs/*.jar
+        name: raven-bs-plus-${{ matrix.os }}
+        path: ${{ env.JAR_PATH }}
         
   release:
     needs: build
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: windows-latest
+    permissions:
+      contents: write
     
     steps:
     - uses: actions/checkout@v4
@@ -97,10 +99,13 @@ jobs:
       id: hash
       shell: pwsh
       run: |
-        $jar = Get-ChildItem -Path "build/libs" -Filter "*.jar" | Select-Object -First 1
+        $jar = Get-ChildItem -Path "build/libs" -Filter "*.jar" |
+          Where-Object { $_.Name -notmatch '-(sources|dev)\.jar$' } |
+          Select-Object -Single
         $hash = Get-FileHash -Path $jar.FullName -Algorithm SHA256
         echo "HASH=$($hash.Hash)" >> $env:GITHUB_ENV
         echo "JAR_NAME=$($jar.Name)" >> $env:GITHUB_ENV
+        echo "JAR_PATH=$($jar.FullName)" >> $env:GITHUB_ENV
       
     - name: Get version from tag
       id: get_version
@@ -111,11 +116,11 @@ jobs:
       id: create_release
       uses: softprops/action-gh-release@v2
       with:
-        tag_name: ${{ github.ref }}
+        tag_name: v${{ env.VERSION }}
         name: Release ${{ env.VERSION }}
         draft: false
         prerelease: false
-        files: ./build/libs/*.jar
+        files: ${{ env.JAR_PATH }}
         generate_release_notes: true
         body: |
           ## RavenBS-Plus-Plus v${{ env.VERSION }}

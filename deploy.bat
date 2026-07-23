@@ -4,8 +4,8 @@ set "MODS_DIR=C:\Users\ibrag\AppData\Roaming\.sectlauncher\instances\c5ac291e-52
 
 cd /d "%PROJECT_DIR%"
 echo Building project...
-rem Adding clean to ensure we only have the latest jar
-call gradlew clean build
+rem remapJar produces the Fabric-ready JAR without running test tasks.
+call gradlew clean remapJar --no-daemon
 
 if %ERRORLEVEL% NEQ 0 (
     echo Build failed!
@@ -24,9 +24,17 @@ if exist "%MODS_DIR%\raven-bs-fabric-*.jar" (
     del "%MODS_DIR%\raven-bs-fabric-*.jar"
 )
 
-echo Copying new mod...
-rem Copy all non-sources/dev jars (simple wildcard copy, usually fine)
-copy "%PROJECT_DIR%\build\libs\raven-bs-fabric-*.jar" "%MODS_DIR%"
+set "MOD_JAR="
+for /f "delims=" %%F in ('dir /b /a-d "%PROJECT_DIR%\build\libs\raven-bs-fabric-*.jar" ^| findstr /v /i /c:"-sources.jar" /c:"-dev.jar"') do set "MOD_JAR=%PROJECT_DIR%\build\libs\%%F"
+
+if not defined MOD_JAR (
+    echo Release jar not found in "%PROJECT_DIR%\build\libs"
+    pause
+    exit /b 1
+)
+
+echo Copying release mod jar...
+copy /y "%MOD_JAR%" "%MODS_DIR%\" >nul
 
 echo Done!
-pause
+if not defined RAVEN_DEPLOY_NO_PAUSE pause
