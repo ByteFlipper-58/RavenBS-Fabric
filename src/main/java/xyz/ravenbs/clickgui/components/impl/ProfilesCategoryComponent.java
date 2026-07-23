@@ -1,6 +1,5 @@
 package xyz.ravenbs.clickgui.components.impl;
 
-import xyz.ravenbs.clickgui.components.Component;
 import xyz.ravenbs.config.ConfigManager;
 import xyz.ravenbs.module.Module;
 import xyz.ravenbs.module.ModuleCategory;
@@ -12,10 +11,10 @@ import net.minecraft.item.Items;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
-import java.util.Objects;
-import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
 
 public class ProfilesCategoryComponent extends CategoryComponent {
 
@@ -34,24 +33,16 @@ public class ProfilesCategoryComponent extends CategoryComponent {
         this.getModules().add(new ModuleComponent(new SortModule(), this, 0));
         this.getModules().add(new ModuleComponent(new CreateProfileModule(), this, 0));
 
-        // 2. Scan Directory
-        File dir = ConfigManager.getProfilesDirectory();
-        if (dir != null && dir.exists()) {
-            File[] files = dir.listFiles((d, name) -> name.endsWith(".json"));
-            if (files != null) {
-                // Sorting logic
-                if (sortByName) {
-                    Arrays.sort(files, Comparator.comparing(File::getName));
-                } else {
-                    // Start from newest
-                    Arrays.sort(files, (f1, f2) -> Long.compare(f2.lastModified(), f1.lastModified()));
-                }
+        List<File> files = new ArrayList<>(ConfigManager.listProfileFiles());
+        if (sortByName) {
+            files.sort(Comparator.comparing(File::getName, String::compareToIgnoreCase));
+        } else {
+            files.sort((f1, f2) -> Long.compare(f2.lastModified(), f1.lastModified()));
+        }
 
-                for (File file : files) {
-                    String name = file.getName().replace(".json", "");
-                    this.getModules().add(new ModuleComponent(new ProfileModule(name, file), this, 0));
-                }
-            }
+        for (File file : files) {
+            String name = file.getName().replace(".json", "");
+            this.getModules().add(new ModuleComponent(new ProfileModule(name, file), this, 0));
         }
     }
 
@@ -89,10 +80,7 @@ public class ProfilesCategoryComponent extends CategoryComponent {
                  public void toggle() {
                       String name = nameSetting.getString();
                       if (name.isEmpty()) name = defaultName;
-                      // Ensure unique? ConfigManager.saveConfig overwrites.
-                      if (ConfigManager.saveConfig(name)) {
-                          ProfilesCategoryComponent.this.reloadModules();
-                      }
+                      ConfigManager.saveProfile(name);
                  }
             });
         }
@@ -124,9 +112,7 @@ public class ProfilesCategoryComponent extends CategoryComponent {
             this.registerSetting(new ButtonSetting("Overwrite with Current", false) {
                  @Override
                  public void toggle() {
-                     if (ConfigManager.saveConfig(profileName)) {
-                         ProfilesCategoryComponent.this.reloadModules();
-                     }
+                     ConfigManager.saveProfile(profileName);
                  }
             });
             
@@ -136,16 +122,7 @@ public class ProfilesCategoryComponent extends CategoryComponent {
                  public void toggle() {
                      String newName = renameSetting.getString();
                      if (!newName.equals(profileName) && !newName.isEmpty()) {
-                         File newFile = new File(file.getParent(), newName + ".json");
-                         if (file.renameTo(newFile)) {
-                             // Update current profile name if we renamed the active one
-                             if (ConfigManager.getCurrentProfileName().equals(profileName)) {
-                                 // We need to manually update ConfigManager field? 
-                                 // No direct setter, but loading sets it. 
-                                 // Let's just reload modules.
-                             }
-                             ProfilesCategoryComponent.this.reloadModules();
-                         }
+                         ConfigManager.renameProfile(profileName, newName);
                      }
                  }
             });
@@ -153,17 +130,14 @@ public class ProfilesCategoryComponent extends CategoryComponent {
             this.registerSetting(new ButtonSetting("Delete Profile", false) {
                 @Override
                 public void toggle() {
-                     ConfigManager.deleteConfig(profileName);
+                     ConfigManager.deleteProfile(profileName);
                 }
             });
         }
 
         @Override
         public void onEnable() {
-            if (ConfigManager.loadConfig(profileName)) {
-                 // Config loaded. This sets currentProfileName.
-                 ProfilesCategoryComponent.this.reloadModules();
-            }
+            ConfigManager.loadProfile(profileName);
         }
     }
 }

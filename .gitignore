@@ -42,5 +42,5 @@ Replay_Mod_Recordings/
 screenshots/
 logs/
 crash-reports/
-config/
-!config/default_config.json
+/config/
+!/config/default_config.json

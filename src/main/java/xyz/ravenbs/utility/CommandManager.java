@@ -4,8 +4,6 @@ import xyz.ravenbs.module.ModuleManager;
 import xyz.ravenbs.module.Module;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.resource.language.I18n;
-import java.io.File;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -84,9 +82,8 @@ public class CommandManager {
                     return true;
                 }
                 if (args[1].equalsIgnoreCase("list")) {
-                    File dir = xyz.ravenbs.config.ConfigManager.getProfilesDirectory();
-                    String[] files = dir.list((d, name) -> name.endsWith(".json"));
-                    if (files == null || files.length == 0) {
+                    java.util.List<String> profiles = xyz.ravenbs.config.ConfigManager.listProfiles();
+                    if (profiles.isEmpty()) {
                         Utils.sendMessage(tr("raven.command.config.list.empty"));
                         return true;
                     }
@@ -94,10 +91,7 @@ public class CommandManager {
                     if (currentProfile != null && !currentProfile.isEmpty()) {
                         Utils.sendMessage(tr("raven.command.config.current", currentProfile));
                     }
-                    String names = Arrays.stream(files)
-                            .map(f -> f.replace(".json", ""))
-                            .sorted(String::compareToIgnoreCase)
-                            .collect(Collectors.joining(", "));
+                    String names = profiles.stream().collect(Collectors.joining(", "));
                     Utils.sendMessage(tr("raven.command.config.list", names));
                     return true;
                 }
@@ -107,13 +101,13 @@ public class CommandManager {
                 }
                 String profileName = args[2];
                 if (args[1].equalsIgnoreCase("save")) {
-                    if (xyz.ravenbs.config.ConfigManager.saveConfig(profileName)) {
+                    if (xyz.ravenbs.config.ConfigManager.saveProfile(profileName)) {
                         Utils.sendMessage("§aSaved config: " + profileName);
                     } else {
                         Utils.sendMessage("§cFailed to save.");
                     }
                 } else if (args[1].equalsIgnoreCase("load")) {
-                    if (xyz.ravenbs.config.ConfigManager.loadConfig(profileName)) {
+                    if (xyz.ravenbs.config.ConfigManager.loadProfile(profileName)) {
                         Utils.sendMessage("§aLoaded config: " + profileName);
                     } else {
                         Utils.sendMessage("§cConfig not found.");
