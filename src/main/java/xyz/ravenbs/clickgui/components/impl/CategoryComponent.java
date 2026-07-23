@@ -36,7 +36,7 @@ public class CategoryComponent {
     
     public void reloadModules() {
         this.modules.clear();
-        for (Module m : ModuleManager.modules) {
+        for (Module m : ModuleManager.getModules()) {
             if (m.getCategory() == this.category) {
                 // Initialize with 0 offset, logic will handle rendering positions
                 modules.add(new ModuleComponent(m, this, 0));

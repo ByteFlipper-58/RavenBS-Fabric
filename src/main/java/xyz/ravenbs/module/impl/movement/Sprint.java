@@ -4,6 +4,7 @@ import xyz.ravenbs.module.Module;
 import xyz.ravenbs.module.ModuleCategory;
 import xyz.ravenbs.module.setting.impl.ButtonSetting;
 import xyz.ravenbs.module.setting.impl.DescriptionSetting;
+import xyz.ravenbs.utility.ModuleSafetyManager;
 
 public class Sprint extends Module {
     private ButtonSetting displayText;
@@ -19,7 +20,7 @@ public class Sprint extends Module {
     @Override
     public void onUpdate() {
         if (mc.player != null && mc.options != null) {
-            mc.options.sprintKey.setPressed(true);
+            ModuleSafetyManager.setKeyPressed(this, mc.options.sprintKey, true);
         }
     }
     
@@ -28,7 +29,7 @@ public class Sprint extends Module {
         if (mc.options != null && mc.getWindow() != null) {
             int keyCode = ((xyz.ravenbs.mixin.client.MixinKeyBindingAccessor) mc.options.sprintKey).getBoundKey().getCode();
             boolean pressed = net.minecraft.client.util.InputUtil.isKeyPressed(mc.getWindow().getHandle(), keyCode);
-            mc.options.sprintKey.setPressed(pressed);
+            ModuleSafetyManager.setKeyPressed(this, mc.options.sprintKey, pressed);
         }
     }
 }

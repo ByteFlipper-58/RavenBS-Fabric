@@ -37,21 +37,34 @@ import xyz.ravenbs.event.PreMotionEvent;
 import xyz.ravenbs.event.PostMotionEvent;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import xyz.ravenbs.utility.ModuleSafetyManager;
+import xyz.ravenbs.utility.RotationUtils;
 
 public class ModuleManager {
-    public static List<Module> modules = new ArrayList<>();
+    private static final List<Module> modules = new ArrayList<>();
+    private static final Map<String, Module> modulesById = new HashMap<>();
+    private static final Set<String> faultedModuleIds = new HashSet<>();
     private static final Logger LOGGER = LoggerFactory.getLogger("ModuleManager");
+    private static boolean registered;
+
+    public static synchronized List<Module> getModules() {
+        return List.copyOf(modules);
+    }
     
     public static void onPreMotion(xyz.ravenbs.event.PreMotionEvent e) {
         for (Module m : modules) {
-            if (m.isEnabled()) {
+            if (m.isEnabled() && !isModuleFaulted(m)) {
                 try {
                     m.onPreMotion(e);
                 } catch (Throwable t) {
-                    logModuleError(m, "onPreMotion", t);
+                    handleModuleError(m, "onPreMotion", t);
                 }
             }
         }
@@ -59,11 +72,11 @@ public class ModuleManager {
 
     public static void onPostMotion(xyz.ravenbs.event.PostMotionEvent e) {
         for (Module m : modules) {
-            if (m.isEnabled()) {
+            if (m.isEnabled() && !isModuleFaulted(m)) {
                 try {
                     m.onPostMotion(e);
                 } catch (Throwable t) {
-                    logModuleError(m, "onPostMotion", t);
+                    handleModuleError(m, "onPostMotion", t);
                 }
             }
         }
@@ -71,11 +84,11 @@ public class ModuleManager {
     
     public static void onPreUpdate() {
         for (Module m : modules) {
-            if (m.isEnabled()) {
+            if (m.isEnabled() && !isModuleFaulted(m)) {
                 try {
                     m.onPreUpdate();
                 } catch (Throwable t) {
-                    logModuleError(m, "onPreUpdate", t);
+                    handleModuleError(m, "onPreUpdate", t);
                 }
             }
         }
@@ -83,11 +96,11 @@ public class ModuleManager {
     
     public static void onPostUpdate() {
         for (Module m : modules) {
-            if (m.isEnabled()) {
+            if (m.isEnabled() && !isModuleFaulted(m)) {
                 try {
                     m.onPostUpdate();
                 } catch (Throwable t) {
-                    logModuleError(m, "onPostUpdate", t);
+                    handleModuleError(m, "onPostUpdate", t);
                 }
             }
         }
@@ -95,16 +108,19 @@ public class ModuleManager {
 
     public static void onUpdate() {
         for (Module m : modules) {
+            if (isModuleFaulted(m)) {
+                continue;
+            }
             try {
                 m.onKeyBind();
             } catch (Throwable t) {
-                logModuleError(m, "onKeyBind", t);
+                handleModuleError(m, "onKeyBind", t);
             }
-            if (m.isEnabled()) {
+            if (m.isEnabled() && !isModuleFaulted(m)) {
                 try {
                     m.onUpdate();
                 } catch (Throwable t) {
-                    logModuleError(m, "onUpdate", t);
+                    handleModuleError(m, "onUpdate", t);
                 }
             }
         }
@@ -112,11 +128,11 @@ public class ModuleManager {
     
     public static void onReceivePacket(xyz.ravenbs.event.ReceivePacketEvent e) {
         for (Module m : modules) {
-            if (m.isEnabled()) {
+            if (m.isEnabled() && !isModuleFaulted(m)) {
                 try {
                     m.onReceivePacket(e);
                 } catch (Throwable t) {
-                    logModuleError(m, "onReceivePacket", t);
+                    handleModuleError(m, "onReceivePacket", t);
                 }
             }
         }
@@ -131,11 +147,11 @@ public class ModuleManager {
             }
         }
         for (Module m : modules) {
-            if (m.isEnabled()) {
+            if (m.isEnabled() && !isModuleFaulted(m)) {
                 try {
                     m.onSendPacket(e);
                 } catch (Throwable t) {
-                    logModuleError(m, "onSendPacket", t);
+                    handleModuleError(m, "onSendPacket", t);
                 }
             }
         }
@@ -143,11 +159,11 @@ public class ModuleManager {
     
     public static void onRenderWorld(net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext context) {
         for (Module m : modules) {
-            if (m.isEnabled()) {
+            if (m.isEnabled() && !isModuleFaulted(m)) {
                 try {
                     m.onRenderWorld(context);
                 } catch (Throwable t) {
-                    logModuleError(m, "onRenderWorld", t);
+                    handleModuleError(m, "onRenderWorld", t);
                 }
             }
         }
@@ -155,11 +171,11 @@ public class ModuleManager {
 
     public static void onRender(net.minecraft.client.gui.DrawContext context, float tickDelta) {
         for (Module m : modules) {
-            if (m.isEnabled()) {
+            if (m.isEnabled() && !isModuleFaulted(m)) {
                 try {
                     m.onRender(context, tickDelta);
                 } catch (Throwable t) {
-                    logModuleError(m, "onRender", t);
+                    handleModuleError(m, "onRender", t);
                 }
             }
         }
@@ -167,6 +183,34 @@ public class ModuleManager {
 
     public static void sort() {
         modules.sort(Comparator.comparing(Module::getName));
+    }
+
+    public static void onWorldJoin() {
+        for (Module module : getModules()) {
+            if (!module.isEnabled() || isModuleFaulted(module)) {
+                continue;
+            }
+            try {
+                module.onWorldJoin();
+            } catch (Throwable t) {
+                handleModuleError(module, "onWorldJoin", t);
+            }
+        }
+    }
+
+    public static void onWorldLeave() {
+        for (Module module : getModules()) {
+            if (!module.isEnabled() || isModuleFaulted(module)) {
+                continue;
+            }
+            try {
+                module.onWorldLeave();
+            } catch (Throwable t) {
+                handleModuleError(module, "onWorldLeave", t);
+            }
+        }
+        ModuleSafetyManager.resetAll();
+        RotationUtils.reset();
     }
     
     // Modules
@@ -229,7 +273,12 @@ public class ModuleManager {
     public static xyz.ravenbs.module.impl.render.NoHurtCam noHurtCam;
     public static xyz.ravenbs.module.impl.render.Trajectories trajectories; // Maybe needed later?
 
-    public void register() {
+    public synchronized void register() {
+        if (registered) {
+            LOGGER.warn("Module registration was requested more than once; ignoring duplicate request");
+            return;
+        }
+        registered = true;
         // --- Combat ---
         addModule(killAura = new KillAura());
         addModule(autoClicker = new AutoClicker());
@@ -340,12 +389,43 @@ public class ModuleManager {
         addModule(gui = new GuiModule());
     }
     
-    public void addModule(Module m) {
+    public synchronized void addModule(Module m) {
+        if (m == null) {
+            throw new IllegalArgumentException("Module cannot be null");
+        }
+        if (modulesById.containsKey(m.getId())) {
+            throw new IllegalStateException("Duplicate module ID: " + m.getId());
+        }
+        if (getModule(m.getName()) != null) {
+            throw new IllegalStateException("Duplicate module name: " + m.getName());
+        }
         modules.add(m);
+        modulesById.put(m.getId(), m);
     }
     
-    private static void logModuleError(Module module, String phase, Throwable t) {
-        LOGGER.error("Module {} threw during {}", module.getName(), phase, t);
+    public static void handleModuleError(Module module, String phase, Throwable t) {
+        if (module == null) {
+            LOGGER.error("Unknown module threw during {}", phase, t);
+            return;
+        }
+
+        boolean firstFailure = faultedModuleIds.add(module.getId());
+        if (firstFailure) {
+            LOGGER.error("Module {} failed during {} and was disabled", module.getName(), phase, t);
+        } else {
+            LOGGER.debug("Module {} failed again during {}", module.getName(), phase, t);
+        }
+        module.disableAfterError();
+    }
+
+    public static void clearModuleFault(Module module) {
+        if (module != null) {
+            faultedModuleIds.remove(module.getId());
+        }
+    }
+
+    private static boolean isModuleFaulted(Module module) {
+        return faultedModuleIds.contains(module.getId());
     }
     
     public static Module getModule(String name) {
@@ -355,6 +435,10 @@ public class ModuleManager {
             }
         }
         return null;
+    }
+
+    public static Module getModuleById(String id) {
+        return modulesById.get(id);
     }
     
     public static Module getModule(Class<? extends Module> clazz) {

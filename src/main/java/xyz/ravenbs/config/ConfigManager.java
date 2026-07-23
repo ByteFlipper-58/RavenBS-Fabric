@@ -11,12 +11,11 @@ import xyz.ravenbs.module.ModuleManager;
 import xyz.ravenbs.module.setting.Setting;
 
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.Reader;
-import java.io.Writer;
 import java.lang.ref.WeakReference;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
@@ -137,6 +136,16 @@ public class ConfigManager {
             }
         }
 
+        File sourceBackup = getBackupFile(source);
+        File targetBackup = getBackupFile(target);
+        if (sourceBackup.exists()) {
+            try {
+                Files.move(sourceBackup.toPath(), targetBackup.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            } catch (IOException e) {
+                LOGGER.warn("Renamed profile {} but could not move its backup", oldName, e);
+            }
+        }
+
         if (oldName.equalsIgnoreCase(currentProfileName)) {
             currentProfileName = newName;
             persistState();
@@ -159,6 +168,7 @@ public class ConfigManager {
 
         try {
             Files.delete(file.toPath());
+            Files.deleteIfExists(getBackupFile(file).toPath());
         } catch (IOException e) {
             LOGGER.error("Failed to delete profile {}", name, e);
             return false;
@@ -254,8 +264,8 @@ public class ConfigManager {
         File file = getDefaultConfigFile();
         if (!file.exists()) {
             savedModuleStates.clear();
-            for (Module module : ModuleManager.modules) {
-                savedModuleStates.put(module.getName(), module.isEnabled());
+            for (Module module : ModuleManager.getModules()) {
+                savedModuleStates.put(module.getId(), module.isEnabled());
             }
             return false;
         }
@@ -272,9 +282,18 @@ public class ConfigManager {
             return false;
         }
 
+        JsonObject root = buildConfigJson();
+        boolean saved = writeJsonAtomically(file, root);
+        if (!saved) {
+            LOGGER.error("Failed to save config to {}", file);
+        }
+        return saved;
+    }
+
+    private static JsonObject buildConfigJson() {
         JsonObject root = new JsonObject();
-        for (Module module : ModuleManager.modules) {
-            savedModuleStates.put(module.getName(), module.isEnabled());
+        for (Module module : ModuleManager.getModules()) {
+            savedModuleStates.put(module.getId(), module.isEnabled());
 
             JsonObject moduleJson = new JsonObject();
             moduleJson.addProperty("enabled", module.isEnabled());
@@ -292,67 +311,142 @@ public class ConfigManager {
             }
 
             moduleJson.add("settings", settingsJson);
-            root.add(module.getName(), moduleJson);
+            root.add(module.getId(), moduleJson);
+        }
+        return root;
+    }
+
+    private static boolean loadConfigInternal(File file) {
+        JsonObject root = readJsonWithBackup(file);
+        if (root == null) {
+            return false;
         }
 
-        try (Writer writer = new FileWriter(file)) {
-            GSON.toJson(root, writer);
+        JsonObject rollbackSnapshot = buildConfigJson();
+        try {
+            applyConfig(root);
             return true;
-        } catch (IOException e) {
-            LOGGER.error("Failed to save config to {}", file, e);
+        } catch (Throwable loadError) {
+            LOGGER.error("Failed to apply config {}; restoring previous module state", file, loadError);
+            try {
+                applyConfig(rollbackSnapshot);
+            } catch (Throwable rollbackError) {
+                LOGGER.error("Failed to restore module state after config load error", rollbackError);
+            }
             return false;
         }
     }
 
-    private static boolean loadConfigInternal(File file) {
-        try (Reader reader = new FileReader(file)) {
+    private static void applyConfig(JsonObject root) {
+        savedModuleStates.clear();
+        for (Module module : ModuleManager.getModules()) {
+            JsonObject moduleJson = getModuleJson(root, module);
+            if (moduleJson == null) {
+                savedModuleStates.put(module.getId(), false);
+                module.setEnabled(false);
+                continue;
+            }
+
+            boolean enabled = moduleJson.has("enabled") && moduleJson.get("enabled").getAsBoolean();
+            savedModuleStates.put(module.getId(), enabled);
+            module.setEnabled(enabled);
+
+            if (moduleJson.has("keycode")) {
+                module.setBind(moduleJson.get("keycode").getAsInt());
+            }
+
+            if (moduleJson.has("settings") && moduleJson.get("settings").isJsonObject()) {
+                JsonObject settingsJson = moduleJson.getAsJsonObject("settings");
+                for (Setting setting : module.getSettings()) {
+                    setting.loadProfile(settingsJson);
+                }
+            }
+        }
+    }
+
+    private static JsonObject readJsonWithBackup(File file) {
+        try {
+            return readJsonObject(file);
+        } catch (Exception primaryError) {
+            File backup = getBackupFile(file);
+            if (!backup.exists()) {
+                LOGGER.error("Failed to read JSON file {} and no backup is available", file, primaryError);
+                return null;
+            }
+
+            LOGGER.warn("Failed to read JSON file {}; recovering from {}", file, backup, primaryError);
+            try {
+                return readJsonObject(backup);
+            } catch (Exception backupError) {
+                LOGGER.error("Failed to read JSON backup {}", backup, backupError);
+                return null;
+            }
+        }
+    }
+
+    private static JsonObject readJsonObject(File file) throws IOException {
+        try (BufferedReader reader = Files.newBufferedReader(file.toPath(), StandardCharsets.UTF_8)) {
             JsonElement jsonElement = JsonParser.parseReader(reader);
             if (!jsonElement.isJsonObject()) {
-                return false;
+                throw new IOException("Expected a JSON object in " + file);
             }
+            return jsonElement.getAsJsonObject();
+        }
+    }
 
-            JsonObject root = jsonElement.getAsJsonObject();
-            savedModuleStates.clear();
-
-            for (Module module : ModuleManager.modules) {
-                if (!root.has(module.getName()) || !root.get(module.getName()).isJsonObject()) {
-                    savedModuleStates.put(module.getName(), false);
-                    module.setEnabled(false);
-                    continue;
-                }
-
-                JsonObject moduleJson = root.getAsJsonObject(module.getName());
-                boolean enabled = moduleJson.has("enabled") && moduleJson.get("enabled").getAsBoolean();
-                savedModuleStates.put(module.getName(), enabled);
-                module.setEnabled(enabled);
-
-                if (moduleJson.has("keycode")) {
-                    module.setBind(moduleJson.get("keycode").getAsInt());
-                }
-
-                if (moduleJson.has("settings") && moduleJson.get("settings").isJsonObject()) {
-                    JsonObject settingsJson = moduleJson.getAsJsonObject("settings");
-                    for (Setting setting : module.getSettings()) {
-                        setting.loadProfile(settingsJson);
-                    }
-                }
-            }
-
-            return true;
-        } catch (IOException e) {
-            LOGGER.error("Failed to load config from {}", file, e);
+    private static boolean writeJsonAtomically(File file, JsonObject data) {
+        File parent = file.getParentFile();
+        if (parent == null || (!parent.exists() && !parent.mkdirs())) {
             return false;
         }
+
+        java.nio.file.Path temporary = null;
+        try {
+            temporary = Files.createTempFile(parent.toPath(), file.getName() + ".", ".tmp");
+            try (BufferedWriter writer = Files.newBufferedWriter(temporary, StandardCharsets.UTF_8)) {
+                GSON.toJson(data, writer);
+            }
+
+            if (file.exists()) {
+                Files.copy(file.toPath(), getBackupFile(file).toPath(), StandardCopyOption.REPLACE_EXISTING);
+            }
+
+            try {
+                Files.move(temporary, file.toPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+            } catch (java.nio.file.AtomicMoveNotSupportedException ignored) {
+                Files.move(temporary, file.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            }
+            return true;
+        } catch (IOException e) {
+            LOGGER.error("Failed to atomically write {}", file, e);
+            return false;
+        } finally {
+            if (temporary != null) {
+                try {
+                    Files.deleteIfExists(temporary);
+                } catch (IOException ignored) {
+                }
+            }
+        }
+    }
+
+    private static JsonObject getModuleJson(JsonObject root, Module module) {
+        if (root.has(module.getId()) && root.get(module.getId()).isJsonObject()) {
+            return root.getAsJsonObject(module.getId());
+        }
+        // Existing profiles used the module display name before stable module IDs were introduced.
+        if (root.has(module.getName()) && root.get(module.getName()).isJsonObject()) {
+            return root.getAsJsonObject(module.getName());
+        }
+        return null;
     }
 
     private static void persistState() {
         JsonObject stateJson = new JsonObject();
         stateJson.addProperty("currentProfile", currentProfileName);
 
-        try (Writer writer = new FileWriter(getStateFile())) {
-            GSON.toJson(stateJson, writer);
-        } catch (IOException e) {
-            LOGGER.error("Failed to save config state", e);
+        if (!writeJsonAtomically(getStateFile(), stateJson)) {
+            LOGGER.error("Failed to save config state");
         }
     }
 
@@ -362,19 +456,17 @@ public class ConfigManager {
             return "";
         }
 
-        try (Reader reader = new FileReader(stateFile)) {
-            JsonElement jsonElement = JsonParser.parseReader(reader);
-            if (!jsonElement.isJsonObject()) {
+        try {
+            JsonObject stateJson = readJsonWithBackup(stateFile);
+            if (stateJson == null) {
                 return "";
             }
-
-            JsonObject stateJson = jsonElement.getAsJsonObject();
             if (!stateJson.has("currentProfile")) {
                 return "";
             }
 
             return normalizeProfileName(stateJson.get("currentProfile").getAsString());
-        } catch (IOException e) {
+        } catch (Exception e) {
             LOGGER.error("Failed to read config state", e);
             return "";
         }
@@ -386,6 +478,10 @@ public class ConfigManager {
 
     private static File getStateFile() {
         return new File(getConfigDirectory(), STATE_FILE);
+    }
+
+    private static File getBackupFile(File file) {
+        return new File(file.getParentFile(), file.getName() + ".bak");
     }
 
     private static File getProfileFile(String profileName) {

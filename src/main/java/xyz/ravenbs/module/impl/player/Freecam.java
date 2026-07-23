@@ -72,6 +72,13 @@ public class Freecam extends Module {
             dummy = null;
         }
     }
+
+    @Override
+    public void onWorldLeave() {
+        // The next world must not inherit a dummy entity or modified flight abilities.
+        disable();
+        dummy = null;
+    }
     
     @Override
     public void onUpdate() {

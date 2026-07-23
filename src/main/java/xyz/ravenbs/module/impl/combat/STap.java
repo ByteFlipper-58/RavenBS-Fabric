@@ -5,6 +5,7 @@ import xyz.ravenbs.event.PreMotionEvent;
 import xyz.ravenbs.module.Module;
 import xyz.ravenbs.module.ModuleCategory;
 import xyz.ravenbs.module.setting.impl.SliderSetting;
+import xyz.ravenbs.utility.ModuleSafetyManager;
 import net.minecraft.entity.Entity;
 
 public class STap extends Module {
@@ -68,7 +69,7 @@ public class STap extends Module {
     private void startSTap() {
         isHolding = true;
         startHoldTime = System.currentTimeMillis();
-        mc.options.backKey.setPressed(true);
+        ModuleSafetyManager.setKeyPressed(this, mc.options.backKey, true);
     }
 
     @Override
@@ -84,6 +85,6 @@ public class STap extends Module {
 
         int keyCode = ((xyz.ravenbs.mixin.client.MixinKeyBindingAccessor) mc.options.backKey).getBoundKey().getCode();
         boolean pressed = net.minecraft.client.util.InputUtil.isKeyPressed(mc.getWindow().getHandle(), keyCode);
-        mc.options.backKey.setPressed(pressed);
+        ModuleSafetyManager.setKeyPressed(this, mc.options.backKey, pressed);
     }
 }

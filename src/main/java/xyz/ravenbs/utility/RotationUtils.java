@@ -9,6 +9,15 @@ public class RotationUtils {
     public static float renderYaw;
     public static float prevRenderYaw;
     public static float[] serverRotations = new float[] { 0, 0 };
+
+    public static void reset() {
+        renderPitch = 0.0f;
+        prevRenderPitch = 0.0f;
+        renderYaw = 0.0f;
+        prevRenderYaw = 0.0f;
+        serverRotations[0] = 0.0f;
+        serverRotations[1] = 0.0f;
+    }
     
     public static void setRenderYaw(float yaw) {
         if (mc.player != null) {

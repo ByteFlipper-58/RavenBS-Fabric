@@ -191,7 +191,7 @@ public class CommandManager {
             java.util.List<Suggestion> list = new java.util.ArrayList<>();
             
             if (cmd.equals(".toggle") || cmd.equals(".t") || cmd.equals(".bind")) {
-                for (Module m : ModuleManager.modules) {
+                for (Module m : ModuleManager.getModules()) {
                     if (m.getName().toLowerCase().startsWith(arg)) {
                         list.add(new Suggestion(m.getName(), m.getDescription())); // Assuming getDescription exists or use name
                     }

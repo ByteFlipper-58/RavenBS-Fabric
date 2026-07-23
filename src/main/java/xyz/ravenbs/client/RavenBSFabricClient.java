@@ -55,9 +55,13 @@ public class RavenBSFabricClient implements ClientModInitializer {
         }
         
         net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
+            ModuleManager.onWorldJoin();
             xyz.ravenbs.utility.FriendManager.refreshOnlineIdentities();
             xyz.ravenbs.utility.UpdateChecker.onJoin();
         });
+
+        net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.DISCONNECT.register((handler, client) ->
+                ModuleManager.onWorldLeave());
 
         xyz.ravenbs.RavenBSFabric.LOGGER.info("RavenBS-Fabric initialized");
     }

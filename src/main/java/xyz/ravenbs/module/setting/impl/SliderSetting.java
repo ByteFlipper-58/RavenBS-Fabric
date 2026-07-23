@@ -41,7 +41,9 @@ public class SliderSetting extends Setting {
 
     public void setValue(double n) {
         n = checkValue(n, min, max);
-        n = Math.round(n * (1.0 / interval)) / (1.0 / interval);
+        if (interval > 0.0) {
+            n = Math.round(n * (1.0 / interval)) / (1.0 / interval);
+        }
         this.value = n;
     }
 
@@ -62,15 +64,16 @@ public class SliderSetting extends Setting {
 
     @Override
     public void loadProfile(JsonObject data) {
-        if (data.has(name) && data.get(name).isJsonPrimitive()) {
-            setValue(data.get(name).getAsDouble());
+        com.google.gson.JsonElement value = getProfileValue(data);
+        if (value != null && value.isJsonPrimitive()) {
+            setValue(value.getAsDouble());
         }
     }
 
     @Override
     public JsonObject toJson() {
         JsonObject json = new JsonObject();
-        json.addProperty(name, value);
+        json.addProperty(getStorageId(), value);
         return json;
     }
 }

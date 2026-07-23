@@ -32,11 +32,12 @@ public class ColorSetting extends Setting {
     
     @Override
     public void loadProfile(com.google.gson.JsonObject data) {
-        if (data.has(name) && data.get(name).isJsonObject()) {
-            com.google.gson.JsonObject colorData = data.getAsJsonObject(name);
-            red.setValue(colorData.get("r").getAsDouble());
-            green.setValue(colorData.get("g").getAsDouble());
-            blue.setValue(colorData.get("b").getAsDouble());
+        com.google.gson.JsonElement value = getProfileValue(data);
+        if (value != null && value.isJsonObject()) {
+            com.google.gson.JsonObject colorData = value.getAsJsonObject();
+            if (colorData.has("r")) red.setValue(colorData.get("r").getAsDouble());
+            if (colorData.has("g")) green.setValue(colorData.get("g").getAsDouble());
+            if (colorData.has("b")) blue.setValue(colorData.get("b").getAsDouble());
             if (colorData.has("rainbow")) rainbow.setEnabled(colorData.get("rainbow").getAsBoolean());
         }
     }
@@ -49,7 +50,7 @@ public class ColorSetting extends Setting {
         colorData.addProperty("g", green.getInput());
         colorData.addProperty("b", blue.getInput());
         colorData.addProperty("rainbow", rainbow.isToggled());
-        json.add(name, colorData);
+        json.add(getStorageId(), colorData);
         return json;
     }
 

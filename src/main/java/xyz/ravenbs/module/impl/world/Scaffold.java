@@ -7,6 +7,7 @@ import xyz.ravenbs.module.setting.impl.ButtonSetting;
 import xyz.ravenbs.utility.RotationUtils;
 import xyz.ravenbs.utility.ScaffoldUtils;
 import xyz.ravenbs.utility.Utils;
+import xyz.ravenbs.utility.ModuleSafetyManager;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
@@ -101,7 +102,7 @@ public class Scaffold extends Module {
     public void onDisable() {
         blockData = null;
         if (mc.options != null) {
-            mc.options.sneakKey.setPressed(false);
+            ModuleSafetyManager.setKeyPressed(this, mc.options.sneakKey, false);
         }
     }
     
@@ -139,12 +140,12 @@ public class Scaffold extends Module {
             if (blockData != null) {
                  BlockPos under = new BlockPos((int)mc.player.getX(), (int)(mc.player.getY() - 1), (int)mc.player.getZ());
                  if (mc.world.getBlockState(under).isAir()) {
-                     mc.options.sneakKey.setPressed(true);
+                     ModuleSafetyManager.setKeyPressed(this, mc.options.sneakKey, true);
                  } else {
-                     mc.options.sneakKey.setPressed(false);
+                     ModuleSafetyManager.setKeyPressed(this, mc.options.sneakKey, false);
                  }
             } else {
-                 mc.options.sneakKey.setPressed(false);
+                 ModuleSafetyManager.setKeyPressed(this, mc.options.sneakKey, false);
             }
         }
     }

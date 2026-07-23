@@ -23,15 +23,16 @@ public class StringSetting extends Setting {
 
     @Override
     public void loadProfile(JsonObject data) {
-        if (data.has(getName()) && data.get(getName()).isJsonPrimitive()) {
-            this.setString(data.get(getName()).getAsString());
+        com.google.gson.JsonElement value = getProfileValue(data);
+        if (value != null && value.isJsonPrimitive()) {
+            this.setString(value.getAsString());
         }
     }
 
     @Override
     public JsonObject toJson() {
         JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty(getName(), getString());
+        jsonObject.addProperty(getStorageId(), getString());
         return jsonObject;
     }
 }

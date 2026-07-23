@@ -28,6 +28,13 @@ public class FakeLag extends Module {
     public void onDisable() {
         sendQueue();
     }
+
+    @Override
+    public void onWorldLeave() {
+        ignoring = false;
+        lastSend = 0L;
+        packetQueue.clear();
+    }
     
     @Override
     public void onUpdate() {

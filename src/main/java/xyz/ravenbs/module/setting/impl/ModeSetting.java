@@ -22,7 +22,7 @@ public class ModeSetting extends Setting {
     }
 
     public void setInput(int input) {
-        this.input = input;
+        this.input = options.length == 0 ? 0 : Math.max(0, Math.min(input, options.length - 1));
     }
 
     public void cycle() {
@@ -34,15 +34,16 @@ public class ModeSetting extends Setting {
 
     @Override
     public void loadProfile(JsonObject data) {
-        if (data.has(name) && data.get(name).isJsonPrimitive()) {
-            input = data.get(name).getAsInt();
+        com.google.gson.JsonElement value = getProfileValue(data);
+        if (value != null && value.isJsonPrimitive()) {
+            setInput(value.getAsInt());
         }
     }
 
     @Override
     public JsonObject toJson() {
         JsonObject data = new JsonObject();
-        data.addProperty(name, input);
+        data.addProperty(getStorageId(), input);
         return data;
     }
 }

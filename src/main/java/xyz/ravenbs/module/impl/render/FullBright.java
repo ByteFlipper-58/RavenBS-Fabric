@@ -12,8 +12,10 @@ public class FullBright extends Module {
 
     @Override
     public void onEnable() {
-        if (mc.options != null) {
+        if (mc.options != null && originalGamma == null) {
             originalGamma = mc.options.getGamma().getValue();
+        }
+        if (mc.options != null) {
             mc.options.getGamma().setValue(100.0);
         }
     }
@@ -22,6 +24,21 @@ public class FullBright extends Module {
     public void onDisable() {
         if (mc.options != null && originalGamma != null) {
             mc.options.getGamma().setValue(originalGamma);
+            originalGamma = null;
+        }
+    }
+
+    @Override
+    public void onWorldLeave() {
+        if (mc.options != null && originalGamma != null) {
+            mc.options.getGamma().setValue(originalGamma);
+        }
+    }
+
+    @Override
+    public void onWorldJoin() {
+        if (mc.options != null && isEnabled()) {
+            mc.options.getGamma().setValue(100.0);
         }
     }
 }

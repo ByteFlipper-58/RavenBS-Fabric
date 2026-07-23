@@ -72,12 +72,12 @@ public class HUD extends Module {
     }
 
     private void renderArrayList(DrawContext context) {
-        List<Module> sortedModules = ModuleManager.modules.stream()
+        List<Module> sortedModules = ModuleManager.getModules().stream()
             .filter(m -> !m.getName().equals("HUD"))
             .filter(m -> !m.getName().equals("Gui"))
             .filter(m -> {
                 boolean enabled = m.isEnabled();
-                boolean configEnabled = xyz.ravenbs.config.ConfigManager.isModuleEnabledInConfig(m.getName());
+                boolean configEnabled = xyz.ravenbs.config.ConfigManager.isModuleEnabledInConfig(m.getId());
                 // Show if currently enabled OR if it WAS enabled in config (so we can show removal)
                 return enabled || configEnabled;
             })
@@ -113,7 +113,7 @@ public class HUD extends Module {
     private String getDisplayName(Module module) {
         String name = getModuleName(module);
         boolean enabled = module.isEnabled();
-        boolean configEnabled = xyz.ravenbs.config.ConfigManager.isModuleEnabledInConfig(module.getName());
+        boolean configEnabled = xyz.ravenbs.config.ConfigManager.isModuleEnabledInConfig(module.getId());
         
         if (enabled && !configEnabled) {
             return "+" + name;

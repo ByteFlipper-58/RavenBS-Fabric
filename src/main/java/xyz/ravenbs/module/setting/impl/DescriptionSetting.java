@@ -16,6 +16,11 @@ public class DescriptionSetting extends Setting {
     }
 
     @Override
+    public boolean isPersistent() {
+        return false;
+    }
+
+    @Override
     public void loadProfile(JsonObject data) {
         // Description hasn't state to save
     }

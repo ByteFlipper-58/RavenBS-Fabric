@@ -25,15 +25,16 @@ public class ButtonSetting extends Setting {
 
     @Override
     public void loadProfile(JsonObject data) {
-        if (data.has(name) && data.get(name).isJsonPrimitive()) {
-            this.isEnabled = data.get(name).getAsBoolean();
+        com.google.gson.JsonElement value = getProfileValue(data);
+        if (value != null && value.isJsonPrimitive()) {
+            this.isEnabled = value.getAsBoolean();
         }
     }
 
     @Override
     public JsonObject toJson() {
         JsonObject json = new JsonObject();
-        json.addProperty(name, isEnabled);
+        json.addProperty(getStorageId(), isEnabled);
         return json;
     }
 }

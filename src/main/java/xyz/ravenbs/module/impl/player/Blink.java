@@ -44,6 +44,12 @@ public class Blink extends Module {
     }
 
     @Override
+    public void onWorldLeave() {
+        flushing = false;
+        packets.clear();
+    }
+
+    @Override
     public void onSendPacket(SendPacketEvent e) {
         if (flushing) {
             return;
