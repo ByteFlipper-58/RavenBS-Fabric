@@ -1,8 +1,8 @@
-# RavenBS-Fabric (Minecraft 1.20.1)
+# RavenBS-Fabric 1.1.0 (Minecraft 1.20.1)
 
 ![RavenBS Client](img/screenshot_0.png)
 [![License](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/github/v/release/ByteFlipper-58/RavenBS-Fabric?color=44ac40)](https://github.com/ByteFlipper-58/RavenBS-Fabric/releases/latest)
+[![Version](https://img.shields.io/badge/version-1.1.0-44ac40)](https://github.com/ByteFlipper-58/RavenBS-Fabric/releases)
 [![Stars](https://img.shields.io/github/stars/ByteFlipper-58/RavenBS-Fabric?style=flat&logo=github&color=ffd840)](https://github.com/ByteFlipper-58/RavenBS-Fabric/stargazers)
 
 ## Description
@@ -33,6 +33,7 @@ RavenBS-Fabric uses a JSON-based configuration system.
 | `.config save/load <name>` | Save or load a config profile. | `.config save legit` |
 | `.config list` | List available profiles. | `.config list` |
 | `.updatecheck on/off/status` | Enable/disable or check the update checker. | `.updatecheck status` |
+| `.debug` | Show server context and module diagnostics. | `.debug` |
 | `.help` | Show all commands. | `.help` |
 
 You can disable the update checker at any time with `.updatecheck off` and re-enable it with `.updatecheck on`.
@@ -41,7 +42,7 @@ You can disable the update checker at any time with `.updatecheck off` and re-en
 
 ### Prerequisites
 - [JDK 21 LTS](https://adoptium.net/temurin/releases/?version=21) (for compilation)
-- [Gradle](https://gradle.org/install/) (latest version)
+- No separate Gradle installation is required: use the included Gradle Wrapper.
 
 ### Building the project
 ```bash
@@ -49,11 +50,12 @@ You can disable the update checker at any time with `.updatecheck off` and re-en
 git clone https://github.com/ByteFlipper-58/RavenBS-Fabric.git   
 cd RavenBS-Fabric
 
-# Build the project
-./gradlew build --no-daemon
+# Build the release JAR
+./gradlew clean remapJar --no-daemon
 ```
 
-The compiled JAR files will be available in the `build/libs/` folder.
+The release file is `build/libs/raven-bs-fabric-1.1.0.jar`. Do not use files
+ending in `-dev.jar` or `-sources.jar` in the Minecraft `mods` folder.
 
 ### IDE Setup
 The project uses Gradle to manage dependencies and configuration. You can import the project into IntelliJ IDEA or Eclipse.
